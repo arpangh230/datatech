@@ -1,0 +1,3004 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আর্থিক ব্যবস্থাপনা সফটওয়্যার</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom CSS for finer control and aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            margin: 0; /* Ensures no default margin */
+            padding: 0; /* Ensures no default padding */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+        /* Removed display: flex and min-height: 100vh from #main-app */
+        /* This allows the body to handle overall scrolling */
+        .sidebar {
+            background-color: #2c3e50; /* Darker shade for sidebar as per new image */
+            color: white;
+            min-height: 100vh; /* Sidebar always takes at least full viewport height */
+            width: 250px;
+            position: fixed; /* Keep sidebar fixed */
+            top: 0;
+            left: 0;
+            padding: 1.5rem 1rem;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
+            /* Removed overflow-y: auto from sidebar, allowing body to scroll if sidebar content overflows */
+        }
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        .main-content {
+            margin-left: 250px; /* Offset for fixed sidebar */
+            padding: 1.5rem;
+            transition: margin-left 0.3s ease-in-out;
+            /* Removed overflow-y: auto from main-content, allowing body to scroll */
+        }
+        .main-content.full-width {
+            margin-left: 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .nav-item:hover {
+            background-color: #34495e; /* Slightly lighter on hover */
+        }
+        .nav-item.active {
+            background-color: #34495e; /* Active item background */
+            font-weight: bold;
+        }
+        .nav-item i {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+        /* New styles for sidebar categories */
+        .nav-section-header {
+            background-color: #4a148c; /* Deep Purple for main sections */
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-section-header:hover {
+            background-color: #6a1b9a;
+        }
+        .nav-item-sub {
+            background-color: #5b21a3; /* Slightly lighter purple for sub-items */
+            color: white;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.4rem;
+            margin-bottom: 0.4rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-item-sub:hover {
+            background-color: #6d28d9;
+        }
+        .nav-item-sub .toggle-icon {
+            transition: transform 0.2s ease;
+        }
+        .nav-item-sub .toggle-icon.fa-chevron-right {
+            transform: rotate(0deg);
+        }
+        .nav-item-sub .toggle-icon.fa-chevron-down {
+            transform: rotate(90deg); /* Rotate to indicate open */
+        }
+
+
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        .category-item { /* This class is now used for the detail view rendering, not sidebar */
+            background-color: #f8f8f8;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-item:hover {
+            background-color: #e8e8e8;
+        }
+        .sub-category-list {
+            /* Removed margin-left and border-left for flat display in sidebar */
+            padding-left: 0.75rem; /* Keep some padding for content */
+            margin-top: 0.5rem;
+            /* display: block; /* Always visible by default */
+        }
+        .entry-item {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .entry-item button {
+            margin-left: 0.5rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.3rem;
+            font-size: 0.8rem;
+        }
+        .inline-entry-form {
+            background-color: #f0f0f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1001; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-button:hover {
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 100%;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .main-content.full-width {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: block;
+            }
+        }
+        .menu-toggle {
+            display: none; /* Hidden on desktop */
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1002;
+            background-color: #2c3e50; /* Darker shade */
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        /* Enhanced table styling for both screen and print */
+        .internet-bill-table, .generic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .internet-bill-table th, .internet-bill-table td,
+        .generic-table th, .generic-table td {
+            padding: 0.75rem 1rem;
+            border: 1px solid #e0e0e0; /* All borders for a clean look */
+            text-align: left;
+        }
+        .internet-bill-table th, .generic-table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        .internet-bill-table tbody tr:nth-child(even),
+        .generic-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Zebra striping */
+        }
+        .internet-bill-table tbody tr:hover,
+        .generic-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        .table-total-row {
+            font-weight: bold;
+            background-color: #e6e6e6; /* Distinct background for total row */
+        }
+        .table-total-row td {
+            border-top: 2px solid #ccc; /* Thicker border above total */
+        }
+
+        /* New styles for dashboard cards based on the latest image */
+        .dashboard-metric-card {
+            background-color: #34495e; /* Dark blue/gray as per image */
+            color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .dashboard-metric-card i {
+            font-size: 2.5rem; /* Larger icons */
+            margin-bottom: 0.75rem;
+        }
+        .dashboard-metric-card h3 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            margin-bottom: 0.5rem;
+        }
+        .dashboard-metric-card p {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+        }
+        .quick-action-button {
+            background-color: white;
+            color: #2c3e50; /* Dark text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .quick-action-button:hover {
+            background-color: #f0f2f5;
+            transform: translateY(-2px);
+        }
+        .quick-action-button i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50; /* Dark icon color */
+        }
+        .recent-activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e0e0e0;
+            color: #555;
+        }
+        .recent-activity-item:last-child {
+            border-bottom: none;
+        }
+        /* Specific styles for product/service bill item table */
+        .product-service-item-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .product-service-item-table th,
+        .product-service-item-table td {
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .product-service-item-table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        .product-service-item-table .delete-item-btn {
+            background-color: #ef4444;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-area, #printable-area * {
+                visibility: visible;
+            }
+            #printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 1rem;
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif; /* Ensure font consistency in print */
+            }
+            .no-print {
+                display: none !important;
+            }
+            /* Adjust table specific styles for print */
+            .internet-bill-table, .generic-table, .product-service-item-table {
+                border: 1px solid #000; /* Stronger border for print */
+            }
+            .internet-bill-table th, .internet-bill-table td,
+            .generic-table th, .generic-table td,
+            .product-service-item-table th, .product-service-item-table td {
+                border: 1px solid #000;
+                padding: 0.5rem; /* Slightly less padding for print */
+            }
+            .internet-bill-table th, .generic-table th, .product-service-item-table th {
+                background-color: #e0e0e0;
+            }
+            .internet-bill-table tbody tr:nth-child(even),
+            .generic-table tbody tr:nth-child(even),
+            .product-service-item-table tbody tr:nth-child(even) {
+                background-color: #f0f0f0;
+            }
+            .table-total-row {
+                background-color: #d0d0d0;
+            }
+
+            /* Specific styles for the generated bill print */
+            .bill-print-area {
+                visibility: visible !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 1rem;
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+                color: #000; /* Ensure black text for print */
+            }
+            .bill-print-area * {
+                visibility: visible !important;
+            }
+            .bill-print-area table,
+            .bill-print-area th,
+            .bill-print-area td {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+            }
+            .bill-print-area .no-print-bill {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">লগইন করুন</h2>
+            <div class="mb-4">
+                <input type="text" id="username" placeholder="ইউজারনেম" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-6">
+                <input type="password" id="password" placeholder="পাসওয়ার্ড" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="login-button" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-lg shadow-md">লগইন</button>
+            <p id="login-message" class="text-red-500 mt-4 hidden">ইউজারনেম বা পাসওয়ার্ড ভুল হয়েছে!</p>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="main-app" class="hidden">
+        <!-- Mobile Menu Toggle Button -->
+        <button id="menu-toggle" class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <div class="flex items-center mb-10">
+                <div class="bg-white p-3 rounded-full mr-3">
+                    <i class="fas fa-tshirt text-blue-600 text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold">DATA TECH SOLUTION</span> <!-- Updated name -->
+            </div>
+            <nav>
+                <div id="dashboard-nav" class="nav-item active" data-target="dashboard-view">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>ড্যাশবোর্ড</span>
+                </div>
+
+                <!-- Income Section in Sidebar -->
+                <div class="nav-section-header flex items-center justify-between p-3 rounded-md mb-2 bg-purple-700 hover:bg-purple-800" id="income-section-toggle">
+                    <div class="flex items-center">
+                        <i class="fas fa-plus mr-3 toggle-icon"></i>
+                        <span>ইনকাম</span>
+                    </div>
+                </div>
+                <div id="income-categories-sidebar-container" class="pl-4 hidden">
+                    <!-- Income categories will be dynamically loaded here by JS -->
+                </div>
+                <button id="add-main-income-category-btn" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold mt-2 mb-4 hidden">
+                    <i class="fas fa-plus mr-2"></i> নতুন প্রধান ইনকাম ক্যাটাগরি
+                </button>
+
+                <!-- Expense Section in Sidebar -->
+                <div class="nav-section-header flex items-center justify-between p-3 rounded-md mb-2 bg-purple-700 hover:bg-purple-800" id="expense-section-toggle">
+                    <div class="flex items-center">
+                        <i class="fas fa-minus mr-3 toggle-icon"></i>
+                        <span>খরচ</span>
+                    </div>
+                </div>
+                <div id="expense-categories-sidebar-container" class="pl-4 hidden">
+                    <!-- Expense categories will be dynamically loaded here by JS -->
+                </div>
+                <button id="add-main-expense-category-btn" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold mt-2 mb-4 hidden">
+                    <i class="fas fa-plus mr-2"></i> নতুন প্রধান খরচের ক্যাটাগরি
+                </button>
+
+                <div id="settings-nav" class="nav-item" data-target="settings-view">
+                    <i class="fas fa-cog"></i>
+                    <span>সেটিং</span>
+                </div>
+                <div id="logout-nav" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>লগআউট</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="main-content" class="main-content">
+            <!-- Top Header -->
+            <header class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center mb-6">
+                <h1 id="header-title" class="text-3xl font-bold text-gray-800">ড্যাশবোর্ড</h1>
+                <div class="flex items-center">
+                    <span class="text-gray-600 mr-3">শুভ সকাল, User!</span> <!-- Generic user name -->
+                    <div class="bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center rounded-full font-bold text-xl">
+                        <i class="fas fa-user"></i> <!-- User icon as per image -->
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <i class="fas fa-th-large mr-3"></i> ড্যাশবোর্ড
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"> <!-- Changed grid-cols-4 to grid-cols-3 -->
+                    <div class="dashboard-metric-card">
+                        <i class="fas fa-wallet"></i>
+                        <h3>মোট ইনকাম</h3>
+                        <p id="total-income-display">৳ 0</p>
+                    </div>
+                    <div class="dashboard-metric-card">
+                        <i class="fas fa-money-bill-transfer"></i>
+                        <h3>মোট খরচ</h3>
+                        <p id="total-expense-display">৳ 0</p>
+                    </div>
+                    <div class="dashboard-metric-card">
+                        <i class="fas fa-balance-scale"></i>
+                        <h3>মোট ব্যালেন্স</h3>
+                        <p id="net-balance-display">৳ 0</p>
+                    </div>
+                    <!-- Removed "মোট স্টক আইটেম" and "মোট ব্যবহারকারী" cards -->
+                </div>
+
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 mt-8">সাম্প্রতিক কার্যক্রম</h2>
+                <div class="card p-4">
+                    <ul id="recent-transactions-list" class="divide-y divide-gray-200">
+                        <!-- Recent transactions will be loaded here by JS -->
+                        <li class="py-3 text-gray-500 text-center">কোনো সাম্প্রতিক লেনদেন নেই।</li>
+                    </ul>
+                </div>
+
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 mt-8">দ্রুত একশন</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <button class="quick-action-button">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>নতুন বিক্রি</span>
+                    </button>
+                    <button class="quick-action-button">
+                        <i class="fas fa-box"></i>
+                        <span>পণ্য গ্রহণ করুন</span>
+                    </button>
+                    <button class="quick-action-button">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>হিসাব রিপোর্ট</span>
+                    </button>
+                    <button class="quick-action-button">
+                        <i class="fas fa-user-plus"></i>
+                        <span>ব্যবহারকারী</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Detail View (replaces income-view and expense-view) -->
+            <div id="category-detail-view" class="view hidden">
+                <div id="category-detail-view-content" class="card p-4">
+                    <!-- Dynamic content for selected category will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settings-view" class="view hidden">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <i class="fas fa-cog mr-3"></i> সেটিংস
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">ডেটা ব্যবস্থাপনা</h3>
+                        <button id="export-data-btn" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 font-semibold mb-3">
+                            <i class="fas fa-download mr-2"></i> ডেটা ব্যাকআপ & ডেটা এক্সপোর্ট
+                        </button>
+                        <button id="import-data-btn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold mb-3">
+                            <i class="fas fa-upload mr-2"></i> ডেটা ইম্পোর্ট
+                        </button>
+                        <input type="file" id="import-file-input" accept=".json" class="hidden"> <!-- Hidden file input -->
+                        <button id="reset-all-data-btn" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-300 font-semibold">
+                            <i class="fas fa-trash-alt mr-2"></i> সকল ডেটা রিসেট
+                        </button>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">অন্যান্য সেটিংস</h3>
+                        <p class="text-gray-600">এখানে অন্যান্য সেটিংস অপশন থাকবে।</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Entries (Used only for editing now) -->
+    <div id="entry-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-entry-modal">&times;</span>
+            <h3 id="modal-title" class="text-2xl font-semibold mb-4">এন্ট্রি সম্পাদনা করুন</h3>
+            <input type="hidden" id="modal-entry-id">
+            <input type="hidden" id="modal-category-id">
+            <input type="hidden" id="modal-entry-type"> <!-- 'income' or 'expense' -->
+            <input type="hidden" id="modal-is-internet-bill-collection"> <!-- Added to differentiate -->
+            <input type="hidden" id="modal-is-product-service-bill"> <!-- Added to differentiate -->
+
+
+            <div class="mb-4">
+                <label for="entry-date" class="block text-gray-700 text-sm font-bold mb-2">তারিখ:</label>
+                <input type="date" id="entry-date" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <!-- Conditional fields for Internet Bill Collection -->
+            <div id="modal-internet-bill-fields" class="hidden">
+                <div class="mb-4">
+                    <label for="entry-customer-name-id" class="block text-gray-700 text-sm font-bold mb-2">গ্রাহকের নাম/ID:</label>
+                    <input type="text" id="entry-customer-name-id" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="গ্রাহকের নাম বা ID লিখুন">
+                </div>
+                <div class="mb-4">
+                    <label for="entry-location" class="block text-gray-700 text-sm font-bold mb-2">ঠিকানা/লোকেশন:</label>
+                    <input type="text" id="entry-location" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ঠিকানা বা লোকেশন লিখুন">
+                </div>
+                <div class="mb-6">
+                    <label for="entry-month-period" class="block text-gray-700 text-sm font-bold mb-2">মাস/পিরিয়ড:</label>
+                    <input type="text" id="entry-month-period" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="যেমন: জুন 2024">
+                </div>
+                <div class="mb-4">
+                    <label for="entry-amount" class="block text-gray-700 text-sm font-bold mb-2">পরিমাণ (৳):</label>
+                    <input type="number" id="entry-amount" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="টাকার পরিমাণ লিখুন" required>
+                </div>
+            </div>
+
+            <!-- Conditional fields for Product/Service Bill Collection -->
+            <div id="modal-product-service-bill-fields" class="hidden">
+                <div class="mb-4">
+                    <label for="entry-ps-customer-name-id" class="block text-gray-700 text-sm font-bold mb-2">গ্রাহকের নাম/ID:</label>
+                    <input type="text" id="entry-ps-customer-name-id" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="গ্রাহকের নাম বা ID লিখুন">
+                </div>
+                <div class="mb-4">
+                    <label for="entry-ps-mobile-number" class="block text-gray-700 text-sm font-bold mb-2">গ্রাহকের মোবাইল নম্বর:</label>
+                    <input type="text" id="entry-ps-mobile-number" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="মোবাইল নম্বর লিখুন">
+                </div>
+                <div class="mb-4">
+                    <label for="entry-ps-location" class="block text-gray-700 text-sm font-bold mb-2">ঠিকানা/লোকেশন:</label>
+                    <input type="text" id="entry-ps-location" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ঠিকানা বা লোকেশন লিখুন">
+                </div>
+                <div class="mb-6">
+                    <label for="entry-ps-organization-name" class="block text-gray-700 text-sm font-bold mb-2">প্রতিষ্ঠানের নাম:</label>
+                    <input type="text" id="entry-ps-organization-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="প্রতিষ্ঠানের নাম লিখুন">
+                </div>
+
+                <h4 class="text-lg font-semibold mb-3">আইটেমসমূহ:</h4>
+                <div id="product-service-items-container">
+                    <!-- Items will be dynamically added here -->
+                </div>
+                <button type="button" id="add-product-service-item-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold mt-4">
+                    <i class="fas fa-plus mr-2"></i> আইটেম যোগ করুন
+                </button>
+            </div>
+
+            <!-- General Description field (hidden if internet bill collection specific fields are shown) -->
+            <div id="modal-general-description-field" class="mb-6">
+                <label for="entry-description" class="block text-gray-700 text-sm font-bold mb-2">বিবরণ:</label>
+                <textarea id="entry-description" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-y" placeholder="বিবরণ লিখুন"></textarea>
+            </div>
+            <button id="save-entry-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">সংরক্ষণ করুন</button>
+        </div>
+    </div>
+
+    <!-- Modal for Adding New Category/Name -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-add-category-modal">&times;</span>
+            <h3 class="text-2xl font-semibold mb-4">নতুন ক্যাটাগরি/নাম যোগ করুন</h3>
+            <input type="hidden" id="new-category-parent-id">
+            <input type="hidden" id="new-category-type"> <!-- 'income' or 'expense' -->
+            <input type="hidden" id="new-category-level"> <!-- 'main', 'sub', 'name' -->
+
+            <div class="mb-4">
+                <label for="new-category-name" class="block text-gray-700 text-sm font-bold mb-2">ক্যাটাগরি/নাম:</label>
+                <input type="text" id="new-category-name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="নতুন ক্যাটাগরির নাম লিখুন" required>
+            </div>
+            <button id="save-new-category-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">যোগ করুন</button>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content text-center">
+            <h3 class="text-xl font-semibold mb-4">নিশ্চিত করুন</h3>
+            <p id="confirm-message" class="mb-6 text-gray-700"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-yes-btn" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-300 font-semibold">হ্যাঁ</button>
+                <button id="confirm-no-btn" class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500 transition duration-300 font-semibold">না</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Internet Bill Display Modal -->
+    <div id="internet-bill-display-modal" class="modal">
+        <div class="modal-content max-w-2xl p-8 relative bg-white rounded-lg shadow-xl" style="width: 210mm; min-height: 297mm; box-sizing: border-box;"> <!-- A4 size approx -->
+            <span class="close-button no-print-bill" id="close-internet-bill-modal">&times;</span>
+            <div id="internet-bill-content" class="bill-print-area p-4">
+                <!-- Bill content will be dynamically loaded here -->
+            </div>
+            <div class="flex justify-end mt-4 no-print-bill">
+                <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300 font-semibold print-bill-btn">
+                    <i class="fas fa-print mr-2"></i> প্রিন্ট বিল
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product/Service Bill Display Modal -->
+    <div id="product-service-bill-display-modal" class="modal">
+        <div class="modal-content max-w-4xl p-8 relative bg-white rounded-lg shadow-xl" style="width: 210mm; min-height: 297mm; box-sizing: border-box;"> <!-- A4 size approx -->
+            <span class="close-button no-print-bill" id="close-product-service-bill-modal">&times;</span>
+            <div id="product-service-bill-content" class="bill-print-area p-4">
+                <!-- Bill content will be dynamically loaded here -->
+            </div>
+            <div class="flex justify-end mt-4 no-print-bill">
+                <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300 font-semibold print-bill-btn-ps">
+                    <i class="fas fa-print mr-2"></i> প্রিন্ট বিল
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // IndexedDB Setup
+        const DB_NAME = 'FinanceAppDB';
+        const DB_VERSION = 1;
+        let db;
+
+        // Open IndexedDB
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    // Create object stores if they don't exist
+                    if (!db.objectStoreNames.contains('incomeCategories')) {
+                        db.createObjectStore('incomeCategories', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('expenseCategories')) {
+                        db.createObjectStore('expenseCategories', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('incomeEntries')) {
+                        db.createObjectStore('incomeEntries', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('expenseEntries')) {
+                        db.createObjectStore('expenseEntries', { keyPath: 'id', autoIncrement: true });
+                    }
+                    console.log('IndexedDB upgraded/created successfully.');
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB opened successfully.');
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Generic function to add data to IndexedDB
+        function addData(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.add(data);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Generic function to get all data from IndexedDB
+        function getAllData(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Generic function to get data by ID from IndexedDB
+        function getDataById(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(id);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Generic function to update data in IndexedDB
+        function updateData(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data); // put() updates if key exists, adds if not
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Generic function to delete data from IndexedDB
+        function deleteData(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Global data storage in memory (will be synced with IndexedDB)
+        let incomeCategories = [];
+        let expenseCategories = [];
+        let incomeEntries = [];
+        let expenseEntries = [];
+
+        // --- Initial Data Population (if DB is empty) ---
+        async function populateInitialData() {
+            console.log('Checking IndexedDB for existing data for initial population...');
+            const storedIncomeCategories = await getAllData('incomeCategories');
+            const storedExpenseCategories = await await getAllData('expenseCategories');
+            const storedIncomeEntries = await getAllData('incomeEntries');
+            const storedExpenseEntries = await getAllData('expenseEntries');
+
+            // Only populate if all stores are empty
+            if (storedIncomeCategories.length === 0 && storedExpenseCategories.length === 0 &&
+                storedIncomeEntries.length === 0 && storedExpenseEntries.length === 0) {
+                console.log('IndexedDB is empty, populating initial data...');
+                
+                // Income Categories
+                const rajshthanId = await addData('incomeCategories', { name: 'রাজস্থান', parentId: null, type: 'income', level: 'main' });
+                const rajshthanInternetBillSubId = await addData('incomeCategories', { name: 'ইন্টারনেট বিল', parentId: rajshthanId, type: 'income', level: 'sub' });
+                
+                // Names under রাজস্থান -> ইন্টারনেট বিল as 'name' level categories
+                await addData('incomeCategories', { name: 'Jk office', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Hiji', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Eastem', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Kuti1', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Kuti2', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Paramount city', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'SCB', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Amtol', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Tower1+K+S', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Tower2', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'MIB+G+S', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Fortune+R', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Shopping', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Sanmar+G', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Gec', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Agrabad', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'HAT', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'SSM', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'CHK', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'COX', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'SYT', parentId: rajshthanInternetBillSubId, type: 'income', level: 'name' });
+
+
+                const serviceChargeBillSubId = await addData('incomeCategories', { name: 'সার্ভিস চার্জ বিল', parentId: rajshthanId, type: 'income', level: 'sub' });
+                await addData('incomeCategories', { name: 'Service Client 1', parentId: serviceChargeBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Service Client 2', parentId: serviceChargeBillSubId, type: 'income', level: 'name' });
+
+
+                const productBillSubId = await addData('incomeCategories', { name: 'প্রোডাক্ট বিল', parentId: rajshthanId, type: 'income', level: 'sub' });
+                await addData('incomeCategories', { name: 'Product Client A', parentId: productBillSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Product Client B', parentId: productBillSubId, type: 'income', level: 'name' });
+
+
+                const collectionInternetBillMainId = await addData('incomeCategories', { name: 'কালেকশন ইন্টারনেট বিল', parentId: null, type: 'income', level: 'main' });
+                const internetBillSubCategoryForCollectionId = await addData('incomeCategories', { name: 'ইন্টারনেট বিল', parentId: collectionInternetBillMainId, type: 'income', level: 'sub' });
+                
+                // Names under কালেকশন ইন্টারনেট বিল -> ইন্টারনেট বিল as 'name' level categories
+                await addData('incomeCategories', { name: 'Selim Panjabi', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Gocia', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Almas', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'He int Shop', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Mobile link', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Sayeed Entr', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Cell Care Baher', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Call Care SHM', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Mobile Fixel', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'GADGET & GALAXY', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Nowrin Entr', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Biswash mobile SHM', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Biswash mobile T Baher', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Call Zone', parentId: internetBillSubCategoryForCollectionId, type: 'income', level: 'name' });
+
+
+                const collectionMainId = await addData('incomeCategories', { name: 'Collection', parentId: null, type: 'income', level: 'main' });
+                const collectionProductSubId = await addData('incomeCategories', { name: 'Product', parentId: collectionMainId, type: 'income', level: 'sub' });
+                await addData('incomeCategories', { name: 'Collection Product 1', parentId: collectionProductSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Collection Product 2', parentId: collectionProductSubId, type: 'income', level: 'name' });
+
+                const collectionServiceSubId = await addData('incomeCategories', { name: 'Service', parentId: collectionMainId, type: 'income', level: 'sub' });
+                await addData('incomeCategories', { name: 'Collection Service A', parentId: collectionServiceSubId, type: 'income', level: 'name' });
+                await addData('incomeCategories', { name: 'Collection Service B', parentId: collectionServiceSubId, type: 'income', level: 'name' });
+
+                // Expense Categories
+                const officeExpenseId = await addData('expenseCategories', { name: 'অফিসের খরচ', parentId: null, type: 'expense', level: 'main' });
+                await addData('expenseCategories', { name: 'ইলেকট্রিক বিল', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+                await addData('expenseCategories', { name: 'Snacks', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+                await addData('expenseCategories', { name: 'Water Bill', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+                await addData('expenseCategories', { name: 'Rent', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+                await addData('expenseCategories', { name: 'Services Charge', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+                await addData('expenseCategories', { name: 'Office purchase', parentId: officeExpenseId, type: 'expense', level: 'sub' });
+
+                const staffSalaryId = await addData('expenseCategories', { name: 'স্টাফ বেতন', parentId: null, type: 'expense', level: 'main' });
+                await addData('expenseCategories', { name: 'Arpan', parentId: staffSalaryId, type: 'expense', level: 'name' });
+                await addData('expenseCategories', { name: 'নতুন স্টাফ', parentId: staffSalaryId, type: 'expense', level: 'name' });
+
+                const paymentId = await addData('expenseCategories', { name: 'পেমেন্ট', parentId: null, type: 'expense', level: 'main' });
+                await addData('expenseCategories', { name: 'সনি ইলেকট্রনিক', parentId: paymentId, type: 'expense', level: 'name' });
+                await addData('expenseCategories', { name: 'Shahpir Traders', parentId: paymentId, type: 'expense', level: 'name' });
+
+                const othersCostId = await addData('expenseCategories', { name: 'Others খরচ', parentId: null, type: 'expense', level: 'main' });
+                await addData('expenseCategories', { name: 'NEW cost', parentId: othersCostId, type: 'expense', level: 'sub' });
+
+                console.log('Initial data population complete.');
+            } else {
+                console.log('IndexedDB already contains data. Skipping initial population.');
+            }
+        }
+
+        // --- UI Elements ---
+        const loginPage = document.getElementById('login-page');
+        const mainApp = document.getElementById('main-app');
+        const loginButton = document.getElementById('login-button');
+        const loginMessage = document.getElementById('login-message');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const menuToggle = document.getElementById('menu-toggle');
+        const headerTitle = document.getElementById('header-title');
+
+        const navItems = document.querySelectorAll('.nav-item');
+        const views = document.querySelectorAll('.view');
+
+        const dashboardView = document.getElementById('dashboard-view');
+        const categoryDetailView = document.getElementById('category-detail-view');
+        const categoryDetailViewContent = document.getElementById('category-detail-view-content');
+        const settingsView = document.getElementById('settings-view');
+
+        const totalIncomeDisplay = document.getElementById('total-income-display');
+        const totalExpenseDisplay = document.getElementById('total-expense-display'); // Added
+        const netBalanceDisplay = document.getElementById('net-balance-display'); // Added
+        const recentTransactionsList = document.getElementById('recent-transactions-list');
+
+        const incomeCategoriesSidebarContainer = document.getElementById('income-categories-sidebar-container');
+        const expenseCategoriesSidebarContainer = document.getElementById('expense-categories-sidebar-container');
+
+        const incomeSectionToggle = document.getElementById('income-section-toggle');
+        const expenseSectionToggle = document.getElementById('expense-section-toggle');
+        const addMainIncomeCategoryBtn = document.getElementById('add-main-income-category-btn');
+        const addMainExpenseCategoryBtn = document.getElementById('add-main-expense-category-btn');
+
+
+        const entryModal = document.getElementById('entry-modal');
+        const closeEntryModal = document.getElementById('close-entry-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalEntryId = document.getElementById('modal-entry-id');
+        const modalCategoryId = document.getElementById('modal-category-id');
+        const modalEntryType = document.getElementById('modal-entry-type');
+        const modalIsInternetBillCollection = document.getElementById('modal-is-internet-bill-collection');
+        const modalIsProductServiceBill = document.getElementById('modal-is-product-service-bill'); // New
+        const entryAmountInput = document.getElementById('entry-amount');
+        const entryDateInput = document.getElementById('entry-date');
+        const entryDescriptionInput = document.getElementById('entry-description');
+        const entryCustomerNameIdInput = document.getElementById('entry-customer-name-id');
+        const entryLocationInput = document.getElementById('entry-location'); // New
+        const entryMonthPeriodInput = document.getElementById('entry-month-period');
+        const modalInternetBillFields = document.getElementById('modal-internet-bill-fields');
+        const modalGeneralDescriptionField = document.getElementById('modal-general-description-field');
+        const saveEntryButton = document.getElementById('save-entry-button');
+
+        const entryPsCustomerNameIdInput = document.getElementById('entry-ps-customer-name-id'); // New
+        const entryPsMobileNumberInput = document.getElementById('entry-ps-mobile-number'); // New
+        const entryPsLocationInput = document.getElementById('entry-ps-location'); // New
+        const entryPsOrganizationNameInput = document.getElementById('entry-ps-organization-name'); // New
+        const modalProductServiceBillFields = document.getElementById('modal-product-service-bill-fields'); // New
+        const addProductServiceItemBtn = document.getElementById('add-product-service-item-btn'); // New
+        const productServiceItemsContainer = document.getElementById('product-service-items-container'); // New
+
+
+        const addCategoryModal = document.getElementById('add-category-modal');
+        const closeAddCategoryModal = document.getElementById('close-add-category-modal');
+        const newCategoryParentId = document.getElementById('new-category-parent-id');
+        const newCategoryType = document.getElementById('new-category-type');
+        const newCategoryLevel = document.getElementById('new-category-level');
+        const newCategoryNameInput = document.getElementById('new-category-name');
+        const saveNewCategoryButton = document.getElementById('save-new-category-button');
+
+        // Custom Confirmation Modal Elements
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmYesButton = document.getElementById('confirm-yes-btn');
+        const confirmNoButton = document.getElementById('confirm-no-btn');
+
+        // Internet Bill Display Modal Elements
+        const internetBillDisplayModal = document.getElementById('internet-bill-display-modal');
+        const closeInternetBillModal = document.getElementById('close-internet-bill-modal');
+        const internetBillContent = document.getElementById('internet-bill-content');
+        const printBillBtn = document.querySelector('#internet-bill-display-modal .print-bill-btn');
+
+        // Product/Service Bill Display Modal Elements
+        const productServiceBillDisplayModal = document.getElementById('product-service-bill-display-modal');
+        const closeProductServiceBillModal = document.getElementById('close-product-service-bill-modal');
+        const productServiceBillContent = document.getElementById('product-service-bill-content');
+        const printBillBtnPs = document.querySelector('#product-service-bill-display-modal .print-bill-btn-ps');
+
+
+        // --- Core Application Logic ---
+
+        // Function to show a specific view and update header title
+        function showView(viewId, title) {
+            views.forEach(view => view.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            headerTitle.textContent = title;
+
+            // Remove active class from all nav items
+            navItems.forEach(item => item.classList.remove('active'));
+            // Remove active class from all nav section headers
+            document.querySelectorAll('.nav-section-header').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.nav-item-sub').forEach(item => item.classList.remove('active'));
+
+
+            // Add active class to the selected nav item
+            const activeNavItem = document.querySelector(`[data-target="${viewId}"]`);
+            if (activeNavItem) {
+                activeNavItem.classList.add('active');
+            }
+
+
+            // Hide sidebar on mobile after navigation
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('hidden');
+                mainContent.classList.remove('full-width');
+            }
+        }
+
+        // Helper function to recursively calculate total for a category
+        async function calculateCategoryTotalRecursive(categoryId, type, allCategories, allEntries) {
+            let total = 0;
+            const directEntries = allEntries.filter(entry => entry.categoryId === categoryId);
+            total += directEntries.reduce((sum, entry) => {
+                if (entry.items && Array.isArray(entry.items)) {
+                    return sum + entry.items.reduce((itemSum, item) => itemSum + (item.qty * item.unitPrice), 0);
+                }
+                return sum + entry.amount;
+            }, 0);
+
+            const children = allCategories.filter(child => child.parentId === categoryId);
+            for (const child of children) {
+                total += await calculateCategoryTotalRecursive(child.id, type, allCategories, allEntries);
+            }
+            return total;
+        }
+
+        // Function to render categories recursively in the sidebar
+        async function renderSidebarCategories(container, categories, entries, parentId = null, type) {
+            const filteredCategories = categories.filter(cat => cat.parentId === parentId);
+
+            // Clear previous content before rendering
+            if (parentId === null) { // Only clear for top-level categories to avoid clearing sub-containers
+                container.innerHTML = '';
+            }
+
+            for (const category of filteredCategories) {
+                const categoryItemDiv = document.createElement('div');
+                categoryItemDiv.className = 'nav-item-sub flex items-center justify-between text-white py-2 px-3 rounded-md hover:bg-purple-800 cursor-pointer';
+                // Add data attributes for category ID and type for click handling
+                categoryItemDiv.dataset.categoryId = category.id;
+                categoryItemDiv.dataset.categoryType = type;
+                categoryItemDiv.dataset.categoryLevel = category.level;
+
+                let totalForCategory = await calculateCategoryTotalRecursive(category.id, type, categories, entries);
+
+                categoryItemDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right mr-2 toggle-icon"></i> <!-- For expand/collapse -->
+                        <span>${category.name} <span class="text-xs opacity-75">(৳ ${totalForCategory.toLocaleString('bn-BD')})</span></span>
+                    </div>
+                `;
+                container.appendChild(categoryItemDiv);
+
+                // Create a sub-container for nested categories/names
+                const subContainer = document.createElement('div');
+                subContainer.className = 'pl-4 hidden'; // Initially hidden, will be toggled
+                container.appendChild(subContainer);
+
+                // Event listener to toggle sub-categories or show detail view
+                categoryItemDiv.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent parent click from propagating
+
+                    const isLeafNode = !categories.some(c => c.parentId === category.id);
+                    const toggleIcon = categoryItemDiv.querySelector('.toggle-icon');
+
+                    if (isLeafNode) {
+                        // This is a leaf node, show detail view in main content
+                        showCategoryDetailView(category.id, type, category.level);
+                        // Update active state in sidebar
+                        document.querySelectorAll('.nav-item-sub').forEach(item => item.classList.remove('active'));
+                        categoryItemDiv.classList.add('active');
+                    } else {
+                        // This is a parent node, toggle its children
+                        subContainer.classList.toggle('hidden');
+                        if (toggleIcon) { // Check if toggleIcon exists before manipulating classes
+                            toggleIcon.classList.toggle('fa-chevron-right');
+                            toggleIcon.classList.toggle('fa-chevron-down');
+                        }
+                    }
+                });
+
+                // Recursively render children
+                await renderSidebarCategories(subContainer, categories, entries, category.id, type);
+
+                // If it's the special "internet_bill_section", it should always be open by default
+                if (category.level === 'internet_bill_section') {
+                    subContainer.classList.remove('hidden');
+                    const toggleIcon = categoryItemDiv.querySelector('.toggle-icon');
+                    if (toggleIcon) {
+                        toggleIcon.classList.remove('fa-chevron-right');
+                        toggleIcon.classList.add('fa-chevron-down');
+                    }
+                }
+                // If it's a leaf node (and not the special internet_bill_section), remove the toggle icon as it doesn't expand further
+                const isLeafNode = !categories.some(c => c.parentId === category.id);
+                if (isLeafNode && category.level !== 'internet_bill_section') {
+                    const toggleIcon = categoryItemDiv.querySelector('.toggle-icon');
+                    if (toggleIcon) toggleIcon.remove();
+                }
+            }
+        }
+
+        // New helper function for converting numbers to Bengali words
+        function numberToBengaliWords(n) {
+            if (n === 0) return "শূন্য টাকা";
+
+            const units = ["", "এক", "দুই", "তিন", "চার", "পাঁচ", "ছয়", "সাত", "আট", "নয়"];
+            const teens = ["দশ", "এগারো", "বারো", "তেরো", "চৌদ্দ", "পনেরো", "ষোল", "সতেরো", "আঠারো", "উনিশ"];
+            const tens = ["", "", "বিশ", "ত্রিশ", "চল্লিশ", "পঞ্চাশ", "ষাট", "সত্তর", "আশি", "নব্বই"];
+            const scales = ["", "হাজার", "লাখ", "কোটি", "আরব", "খরব"]; // Simplified scales for Bengali system
+
+            function convertGroup(num) {
+                let str = "";
+                if (num >= 100) {
+                    str += units[Math.floor(num / 100)] + " শত ";
+                    num %= 100;
+                }
+                if (num >= 20) {
+                    str += tens[Math.floor(num / 10)] + " ";
+                    num %= 10;
+                } else if (num >= 10) {
+                    str += teens[num - 10] + " ";
+                    num = 0;
+                }
+                if (num > 0) {
+                    str += units[num] + " ";
+                }
+                return str;
+            }
+
+            let result = [];
+            let integerPart = Math.floor(n);
+            let decimalPart = Math.round((n - integerPart) * 100); // Get two decimal places as integer
+
+            if (integerPart === 0 && decimalPart === 0) return "শূন্য টাকা";
+
+            // Process integer part
+            let tempAmount = integerPart;
+            let scaleIndex = 0;
+            const tempParts = [];
+
+            // Break down number into Bengali scale chunks (crore, lakh, thousand, unit)
+            // This is a simplified version and might not be perfectly accurate for very large numbers
+            // or all nuances of Bengali number system, but covers common cases.
+            tempParts.push(tempAmount % 1000); // Units, hundreds
+            tempAmount = Math.floor(tempAmount / 1000);
+            tempParts.push(tempAmount % 100); // Thousands
+            tempAmount = Math.floor(tempAmount / 100);
+            tempParts.push(tempAmount % 100); // Lakhs
+            tempAmount = Math.floor(tempAmount / 100);
+            tempParts.push(tempAmount % 100); // Crores
+            tempAmount = Math.floor(tempAmount / 100);
+            tempParts.push(tempAmount % 100); // Arab
+            tempAmount = Math.floor(tempAmount / 100);
+            tempParts.push(tempAmount % 100); // Kharab
+
+            for (let j = 0; j < tempParts.length; j++) {
+                if (tempParts[j] > 0) {
+                    let groupWords = convertGroup(tempParts[j]);
+                    if (scales[j]) { // Only add scale if it's not the first group (units)
+                        groupWords += scales[j] + " ";
+                    }
+                    result.unshift(groupWords);
+                }
+            }
+
+            let finalWords = result.join("").trim();
+            if (finalWords === "") finalWords = "শূন্য"; // In case only decimal part exists
+
+            let paisaWords = "";
+            if (decimalPart > 0) {
+                // Convert decimal part (paisa)
+                let paisaUnits = ["", "এক", "দুই", "তিন", "চার", "পাঁচ", "ছয়", "সাত", "আট", "নয়"];
+                let paisaTeens = ["দশ", "এগারো", "বারো", "তেরো", "চৌদ্দ", "পনেরো", "ষোল", "সতেরো", "আঠারো", "উনিশ"];
+                let paisaTens = ["", "", "বিশ", "ত্রিশ", "চল্লিশ", "পঞ্চাশ", "ষাট", "সত্তর", "আশি", "নব্বই"];
+
+                let paisaStr = "";
+                if (decimalPart >= 20) {
+                    paisaStr += paisaTens[Math.floor(decimalPart / 10)] + " ";
+                    decimalPart %= 10;
+                } else if (decimalPart >= 10) {
+                    paisaStr += paisaTeens[decimalPart - 10] + " ";
+                    decimalPart = 0;
+                }
+                if (decimalPart > 0) {
+                    paisaStr += paisaUnits[decimalPart] + " ";
+                }
+                paisaWords = paisaStr.trim() + " পয়সা";
+            }
+
+            if (integerPart > 0 && paisaWords) {
+                return finalWords + " টাকা " + paisaWords + " মাত্র";
+            } else if (integerPart > 0) {
+                return finalWords + " টাকা মাত্র";
+            } else if (paisaWords) {
+                return paisaWords + " মাত্র";
+            }
+            return "শূন্য টাকা মাত্র"; // Fallback for zero
+        }
+
+
+        // Function to render entries for a given category and date range
+        function renderEntries(entriesToRender, targetListElement, category, type, isInternetBillNameCategory, isProductServiceBillCategory) {
+            if (!targetListElement) {
+                console.error('Target list element is null or undefined for category:', category, 'type:', type);
+                return; // Prevent further errors
+            }
+            targetListElement.innerHTML = ''; // Clear previous entries
+            let totalAmount = 0;
+
+            if (entriesToRender.length > 0) {
+                entriesToRender.forEach((entry, index) => {
+                    if (isProductServiceBillCategory) {
+                        totalAmount += entry.items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+                    } else {
+                        totalAmount += entry.amount;
+                    }
+
+                    if (isInternetBillNameCategory) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td> <!-- Serial Number -->
+                            <td>${entry.date}</td>
+                            <td>${entry.customerNameId || 'N/A'}</td>
+                            <td>${entry.location || 'N/A'}</td> <!-- New Location column -->
+                            <td>${entry.monthPeriod || 'N/A'}</td>
+                            <td>৳ ${entry.amount.toLocaleString('bn-BD')}</td>
+                            <td class="no-print">
+                                <button class="bg-green-500 text-white px-2 py-1 rounded-md text-sm generate-bill-btn" data-entry-id="${entry.id}" data-category-id="${category.id}" data-bill-type="internet">
+                                    <i class="fas fa-receipt"></i> বিল তৈরি করুন
+                                </button>
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded-md text-sm edit-entry-btn" data-entry-id="${entry.id}" data-category-id="${category.id}" data-entry-type="${type}" data-is-internet-bill-collection="true">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded-md text-sm delete-entry-btn" data-entry-id="${entry.id}" data-entry-type="${type}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        targetListElement.appendChild(row);
+                    } else if (isProductServiceBillCategory) {
+                        const row = document.createElement('tr');
+                        const entryTotal = entry.items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${entry.date}</td>
+                            <td>${entry.customerNameId || 'N/A'}</td>
+                            <td>${entry.organizationName || 'N/A'}</td>
+                            <td>৳ ${entryTotal.toLocaleString('bn-BD')}</td>
+                            <td class="no-print">
+                                <button class="bg-green-500 text-white px-2 py-1 rounded-md text-sm generate-bill-btn" data-entry-id="${entry.id}" data-category-id="${category.id}" data-bill-type="product-service">
+                                    <i class="fas fa-receipt"></i> বিল তৈরি করুন
+                                </button>
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded-md text-sm edit-entry-btn" data-entry-id="${entry.id}" data-category-id="${category.id}" data-entry-type="${type}" data-is-product-service-bill="true">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded-md text-sm delete-entry-btn" data-entry-id="${entry.id}" data-entry-type="${type}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        targetListElement.appendChild(row);
+                    } else {
+                        const row = document.createElement('tr'); // Changed from li to tr for generic table
+                        row.innerHTML = `
+                            <td>${index + 1}</td> <!-- Serial Number -->
+                            <td>${entry.date}</td>
+                            <td>${entry.description || 'N/A'}</td>
+                            <td>৳ ${entry.amount.toLocaleString('bn-BD')}</td>
+                            <td class="no-print">
+                                <button class="bg-yellow-500 text-white px-2 py-1 rounded-md text-sm edit-entry-btn" data-entry-id="${entry.id}" data-category-id="${category.id}" data-entry-type="${type}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="bg-red-500 text-white px-2 py-1 rounded-md text-sm delete-entry-btn" data-entry-id="${entry.id}" data-entry-type="${type}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        targetListElement.appendChild(row);
+                    }
+                });
+
+                // Add total row
+                const totalRow = document.createElement('tr');
+                totalRow.className = 'table-total-row';
+                if (isInternetBillNameCategory) {
+                    totalRow.innerHTML = `
+                        <td colspan="5">মোট পরিমাণ:</td>
+                        <td>৳ ${totalAmount.toLocaleString('bn-BD')}</td>
+                        <td class="no-print"></td>
+                    `;
+                } else if (isProductServiceBillCategory) {
+                    totalRow.innerHTML = `
+                        <td colspan="4">মোট পরিমাণ:</td>
+                        <td>৳ ${totalAmount.toLocaleString('bn-BD')}</td>
+                        <td class="no-print"></td>
+                    `;
+                } else {
+                    totalRow.innerHTML = `
+                        <td colspan="3">মোট পরিমাণ:</td>
+                        <td>৳ ${totalAmount.toLocaleString('bn-BD')}</td>
+                        <td class="no-print"></td>
+                    `;
+                }
+                targetListElement.appendChild(totalRow);
+
+                // Add amount in words
+                const amountInWordsRow = document.createElement('tr');
+                amountInWordsRow.className = 'table-total-row'; // Use same styling as total row
+                if (isInternetBillNameCategory) {
+                    amountInWordsRow.innerHTML = `<td colspan="7">কথায়: ${numberToBengaliWords(totalAmount)}</td>`;
+                } else if (isProductServiceBillCategory) {
+                    amountInWordsRow.innerHTML = `<td colspan="6">কথায়: ${numberToBengaliWords(totalAmount)}</td>`;
+                } else {
+                    amountInWordsRow.innerHTML = `<td colspan="5">কথায়: ${numberToBengaliWords(totalAmount)}</td>`;
+                }
+                targetListElement.appendChild(amountInWordsRow);
+
+            } else {
+                if (isInternetBillNameCategory) {
+                    targetListElement.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-3">কোনো এন্ট্রি নেই।</td></tr>`;
+                } else if (isProductServiceBillCategory) {
+                    targetListElement.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-3">কোনো এন্ট্রি নেই।</td></tr>`;
+                } else {
+                    targetListElement.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-3">কোনো এন্ট্রি নেই।</td></tr>`;
+                }
+            }
+        }
+
+        // Function to show the detail view for a selected category in the main content area
+        async function showCategoryDetailView(categoryId, type, level) {
+            showView('category-detail-view', getCategoryNameById(categoryId, type)); // Update header title
+
+            categoryDetailViewContent.innerHTML = ''; // Clear previous content
+
+            const category = (type === 'income' ? incomeCategories : expenseCategories).find(cat => cat.id === categoryId);
+            if (!category) return;
+
+            // Determine if the current category is a 'name' level under an 'Internet Bill' subcategory
+            const parentCategory = category.parentId ? getCategoryById(category.parentId, type) : null;
+            const grandparentCategory = parentCategory && parentCategory.parentId ? getCategoryById(parentCategory.parentId, type) : null;
+
+            const isInternetBillNameCategory = (category.level === 'name' && parentCategory && parentCategory.name === 'ইন্টারনেট বিল');
+
+            let isProductServiceBillCategory = false;
+            if (category.level === 'name' && parentCategory) {
+                if (parentCategory.name === 'সার্ভিস চার্জ বিল' || parentCategory.name === 'প্রোডাক্ট বিল') {
+                    isProductServiceBillCategory = true;
+                } else if ((parentCategory.name === 'Product' || parentCategory.name === 'Service') && grandparentCategory && grandparentCategory.name === 'Collection') {
+                    isProductServiceBillCategory = true;
+                }
+            }
+
+
+            // Initial rendering structure with date filters and print button
+            let contentHtml = `
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 mt-6 flex items-center">
+                    <i class="fas fa-plus-circle mr-2"></i> নতুন এন্ট্রি যোগ করুন:
+                </h3>
+                <div class="inline-entry-form p-4 bg-gray-100 rounded-lg shadow-inner">
+                    <div>
+                        <label for="inline-date-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">তারিখ</label>
+                        <input type="date" id="inline-date-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    </div>
+                    ${isInternetBillNameCategory ? `
+                        <div class="mt-4">
+                            <label for="internet-bill-customer-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">গ্রাহকের নাম/ID:</label>
+                            <input type="text" id="internet-bill-customer-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="গ্রাহকের নাম বা ID লিখুন">
+                        </div>
+                        <div class="mt-4">
+                            <label for="internet-bill-location-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">ঠিকানা/লোকেশন:</label>
+                            <input type="text" id="internet-bill-location-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="ঠিকানা বা লোকেশন লিখুন">
+                        </div>
+                        <div class="mt-4">
+                            <label for="internet-bill-month-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">মাস/পিরিয়ড:</label>
+                            <input type="text" id="internet-bill-month-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="যেমন: জুন 2024">
+                        </div>
+                        <div class="mt-4">
+                            <label for="internet-bill-amount-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">পরিমাণ (৳):</label>
+                            <input type="number" id="internet-bill-amount-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="টাকার পরিমাণ" required>
+                        </div>
+                    ` : isProductServiceBillCategory ? `
+                        <div class="mt-4">
+                            <label for="ps-customer-name-id-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">গ্রাহকের নাম/ID:</label>
+                            <input type="text" id="ps-customer-name-id-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="গ্রাহকের নাম বা ID লিখুন">
+                        </div>
+                        <div class="mt-4">
+                            <label for="ps-mobile-number-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">গ্রাহকের মোবাইল নম্বর:</label>
+                            <input type="text" id="ps-mobile-number-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="মোবাইল নম্বর লিখুন">
+                        </div>
+                        <div class="mt-4">
+                            <label for="ps-location-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">ঠিকানা/লোকেশন:</label>
+                            <input type="text" id="ps-location-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="ঠিকানা বা লোকেশন লিখুন">
+                        </div>
+                        <div class="mt-4">
+                            <label for="ps-organization-name-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">প্রতিষ্ঠানের নাম:</label>
+                            <input type="text" id="ps-organization-name-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="প্রতিষ্ঠানের নাম লিখুন">
+                        </div>
+                        <h4 class="text-lg font-semibold mb-3 mt-6">আইটেমসমূহ:</h4>
+                        <div id="ps-items-container-${category.id}">
+                            <!-- Product/Service items will be dynamically added here -->
+                        </div>
+                        <button type="button" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold mt-4 add-ps-item-btn" data-category-id="${category.id}">
+                            <i class="fas fa-plus mr-2"></i> আইটেম যোগ করুন
+                        </button>
+                    ` : `
+                        <div class="mt-4">
+                            <label for="inline-description-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">বিবরণ:</label>
+                            <textarea id="inline-description-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 h-16 resize-y" placeholder="বিবরণ লিখুন"></textarea>
+                        </div>
+                        <div class="mt-4">
+                            <label for="inline-amount-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">পরিমাণ (৳):</label>
+                            <input type="number" id="inline-amount-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="টাকার পরিমাণ" required>
+                        </div>
+                    `}
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold save-inline-entry-btn" data-category-id="${category.id}" data-category-type="${type}" data-is-internet-bill-collection="${isInternetBillNameCategory}" data-is-product-service-bill="${isProductServiceBillCategory}">
+                            যোগ করুন
+                        </button>
+                        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition duration-300 font-semibold reset-inline-entry-btn" data-category-id="${category.id}" data-is-internet-bill-collection="${isInternetBillNameCategory}" data-is-product-service-bill="${isProductServiceBillCategory}">
+                            রিসেট
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 mt-6 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i> তারিখ অনুযায়ী রিপোর্ট
+                </h3>
+                <div class="inline-entry-form p-4 bg-gray-100 rounded-lg shadow-inner grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+                    <div>
+                        <label for="start-date-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">শুরুর তারিখ:</label>
+                        <input type="date" id="start-date-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div>
+                        <label for="end-date-${category.id}" class="block text-gray-700 text-sm font-bold mb-1">শেষের তারিখ:</label>
+                        <input type="date" id="end-date-${category.id}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 font-semibold filter-report-btn" data-category-id="${category.id}" data-category-type="${type}" data-is-internet-bill-collection="${isInternetBillNameCategory}" data-is-product-service-bill="${isProductServiceBillCategory}">
+                            <i class="fas fa-filter mr-2"></i> ফিল্টার
+                        </button>
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300 font-semibold print-report-btn">
+                            <i class="fas fa-print mr-2"></i> প্রিন্ট
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 mt-6 flex items-center">
+                    <i class="fas fa-list-alt mr-2"></i> এন্ট্রি তালিকা
+                </h3>
+                <div class="card p-4">
+                    <div id="printable-area">
+                        <div class="print-header-section text-center mb-6">
+                            <h1 class="text-2xl font-bold mb-2">DATA TECH SOLUTION</h1>
+                            <h2 class="text-xl font-semibold mb-1">${category.name} ${type === 'income' ? 'ইনকাম' : 'খরচ'} রিপোর্ট</h2>
+                            <p class="text-sm text-gray-600 print-date-range"></p>
+                        </div>
+                        ${isInternetBillNameCategory ? `
+                            <table class="internet-bill-table">
+                                <thead>
+                                    <tr>
+                                        <th>ক্রমিক নং</th>
+                                        <th>তারিখ</th>
+                                        <th>গ্রাহকের নাম/ID</th>
+                                        <th>ঠিকানা/লোকেশন</th>
+                                        <th>মাস/পিরিয়ড</th>
+                                        <th>পরিমাণ</th>
+                                        <th class="no-print">একশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="internet-bill-list-${category.id}">
+                                    <!-- Internet bill entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        ` : isProductServiceBillCategory ? `
+                            <table class="generic-table">
+                                <thead>
+                                    <tr>
+                                        <th>ক্রমিক নং</th>
+                                        <th>তারিখ</th>
+                                        <th>গ্রাহকের নাম/ID</th>
+                                        <th>প্রতিষ্ঠানের নাম</th>
+                                        <th>মোট পরিমাণ</th>
+                                        <th class="no-print">একশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-service-list-${category.id}">
+                                    <!-- Product/Service entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        ` : `
+                            <table class="generic-table">
+                                <thead>
+                                    <tr>
+                                        <th>ক্রমিক নং</th>
+                                        <th>তারিখ</th>
+                                        <th>বিবরণ</th>
+                                        <th>পরিমাণ</th>
+                                        <th class="no-print">একশন</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="generic-entry-list-${category.id}">
+                                    <!-- Entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        `}
+                        <div class="print-footer-section text-center mt-6 text-sm text-gray-700">
+                            <p>আপনার বিশ্বাসই আমাদের শক্তি।</p>
+                            <p>যোগাযোগ: আপনার ঠিকানা, আপনার ফোন নম্বর</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            categoryDetailViewContent.innerHTML = contentHtml;
+
+            // Set current date for inline form
+            categoryDetailViewContent.querySelector(`#inline-date-${category.id}`).value = new Date().toISOString().split('T')[0];
+
+            // Get elements for filtering and printing
+            const startDateInput = categoryDetailViewContent.querySelector(`#start-date-${category.id}`);
+            const endDateInput = categoryDetailViewContent.querySelector(`#end-date-${category.id}`);
+            const filterReportBtn = categoryDetailViewContent.querySelector('.filter-report-btn');
+            const printReportBtn = categoryDetailViewContent.querySelector('.print-report-btn');
+            const printHeaderSection = categoryDetailViewContent.querySelector('.print-header-section h2');
+            const printDateRange = categoryDetailViewContent.querySelector('.print-date-range');
+
+            // Set the customer name/ID input value and make it editable for internet bill
+            const internetBillCustomerInput = document.getElementById(`internet-bill-customer-${category.id}`);
+            if (internetBillCustomerInput) {
+                internetBillCustomerInput.value = category.name; // Set initial value from category name
+                internetBillCustomerInput.removeAttribute('readonly'); // Make it editable
+            }
+
+            // Handle adding new product/service items
+            if (isProductServiceBillCategory) {
+                let psItemCounter = 0;
+                const psItemsContainer = document.getElementById(`ps-items-container-${category.id}`);
+                const addPsItemBtn = categoryDetailViewContent.querySelector('.add-ps-item-btn');
+
+                const addProductServiceItemRow = (item = {}) => {
+                    const itemId = psItemCounter++;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 p-2 border rounded-md bg-gray-50';
+                    itemDiv.innerHTML = `
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-xs font-bold mb-1">DESCRIPTION</label>
+                            <input type="text" class="w-full px-2 py-1 border rounded-lg text-sm item-description" placeholder="Description" value="${item.description || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1">WARRANTY</label>
+                            <input type="text" class="w-full px-2 py-1 border rounded-lg text-sm item-warranty" placeholder="Warranty" value="${item.warranty || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1">QTY</label>
+                            <input type="number" class="w-full px-2 py-1 border rounded-lg text-sm item-qty" placeholder="Qty" value="${item.qty || 1}">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1">UNIT PRICE</label>
+                            <input type="number" class="w-full px-2 py-1 border rounded-lg text-sm item-unit-price" placeholder="Unit Price" value="${item.unitPrice || 0}">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" class="delete-item-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    psItemsContainer.appendChild(itemDiv);
+
+                    // Add event listener for delete button
+                    itemDiv.querySelector('.delete-item-btn').addEventListener('click', () => {
+                        itemDiv.remove();
+                    });
+                };
+
+                addPsItemBtn.addEventListener('click', () => addProductServiceItemRow());
+
+                // For new entries, add one empty row by default
+                if (!modalEntryId.value) { // Only add if not editing an existing entry
+                    addProductServiceItemRow();
+                }
+            }
+
+
+            // Function to filter and render entries
+            const filterAndRenderEntries = () => {
+                const allEntries = (type === 'income' ? incomeEntries : expenseEntries).filter(entry => entry.categoryId === category.id);
+                const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+                const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+
+                const filteredEntries = allEntries.filter(entry => {
+                    const entryDate = new Date(entry.date);
+                    // Adjust entryDate to be at the start of the day for accurate comparison
+                    entryDate.setHours(0, 0, 0, 0);
+
+                    let matchesFilter = true;
+                    if (startDate && entryDate < startDate) {
+                        matchesFilter = false;
+                    }
+                    if (endDate) {
+                        // For end date, include all entries up to the end of the selected day
+                        const adjustedEndDate = new Date(endDate);
+                        adjustedEndDate.setHours(23, 59, 59, 999);
+                        if (entryDate > adjustedEndDate) {
+                            matchesFilter = false;
+                        }
+                    }
+                    return matchesFilter;
+                });
+
+                // Update print header and date range
+                printHeaderSection.textContent = `${category.name} ${type === 'income' ? 'ইনকাম' : 'খরচ'} রিপোর্ট`;
+                let dateRangeText = '';
+                if (startDate && endDate) {
+                    dateRangeText = `তারিখ: ${startDate.toLocaleDateString('bn-BD')} থেকে ${endDate.toLocaleDateString('bn-BD')}`;
+                } else if (startDate) {
+                    dateRangeText = `তারিখ: ${startDate.toLocaleDateString('bn-BD')} থেকে বর্তমান`;
+                } else if (endDate) {
+                    dateRangeText = `তারিখ: শুরু থেকে ${endDate.toLocaleDateString('bn-BD')}`;
+                } else {
+                    dateRangeText = `তারিখ: সকল এন্ট্রি`;
+                }
+                printDateRange.textContent = dateRangeText;
+
+
+                if (isInternetBillNameCategory) {
+                    renderEntries(filteredEntries, categoryDetailViewContent.querySelector(`#internet-bill-list-${category.id}`), category, type, true, false);
+                } else if (isProductServiceBillCategory) {
+                    renderEntries(filteredEntries, categoryDetailViewContent.querySelector(`#product-service-list-${category.id}`), category, type, false, true);
+                } else {
+                    renderEntries(filteredEntries, categoryDetailViewContent.querySelector(`#generic-entry-list-${category.id}`), category, type, false, false);
+                }
+            };
+
+            // Initial render of entries (without filter)
+            filterAndRenderEntries();
+
+            // Add event listener for filter button
+            filterReportBtn.addEventListener('click', filterAndRenderEntries);
+
+            // Add event listener for print button
+            printReportBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // Add event listener for inline save button
+            categoryDetailViewContent.querySelector('.save-inline-entry-btn').addEventListener('click', async (e) => {
+                const targetCategoryId = parseInt(e.target.dataset.categoryId);
+                const targetType = e.target.dataset.categoryType;
+                const isInternetBill = e.target.dataset.isInternetBillCollection === 'true';
+                const isProductService = e.target.dataset.isProductServiceBill === 'true';
+
+                let amount, date, description, customerNameId, location, monthPeriod, mobileNumber, organizationName, items;
+
+                date = document.getElementById(`inline-date-${targetCategoryId}`).value;
+                if (!date) {
+                    alert('অনুগ্রহ করে তারিখ লিখুন।');
+                    return;
+                }
+
+                if (isInternetBill) {
+                    amount = parseFloat(document.getElementById(`internet-bill-amount-${targetCategoryId}`).value);
+                    customerNameId = document.getElementById(`internet-bill-customer-${targetCategoryId}`).value.trim();
+                    location = document.getElementById(`internet-bill-location-${targetCategoryId}`).value.trim();
+                    monthPeriod = document.getElementById(`internet-bill-month-${targetCategoryId}`).value.trim();
+                    if (isNaN(amount) || amount <= 0 || !customerNameId || !location || !monthPeriod) {
+                        alert('অনুগ্রহ করে সকল ফিল্ড পূরণ করুন।');
+                        return;
+                    }
+                    description = customerNameId; // Use customerNameId as description for general entries
+                    const entryData = { amount, date, description, customerNameId, location, monthPeriod, categoryId: targetCategoryId };
+                    const newId = await addData(targetType === 'income' ? 'incomeEntries' : 'expenseEntries', entryData);
+                    entryData.id = newId;
+                    if (targetType === 'income') incomeEntries.push(entryData);
+                    else expenseEntries.push(entryData);
+                    alert('এন্ট্রি সফলভাবে যোগ হয়েছে!');
+
+                    // Clear form fields after saving
+                    document.getElementById(`internet-bill-amount-${targetCategoryId}`).value = ''; 
+                    document.getElementById(`internet-bill-location-${targetCategoryId}`).value = ''; 
+                    document.getElementById(`internet-bill-month-${targetCategoryId}`).value = '';
+                    document.getElementById(`internet-bill-customer-${targetCategoryId}`).value = getCategoryNameById(targetCategoryId, targetType); // Reset customer name to category name
+                    document.getElementById(`inline-date-${targetCategoryId}`).value = new Date().toISOString().split('T')[0];
+
+                } else if (isProductService) {
+                    customerNameId = document.getElementById(`ps-customer-name-id-${targetCategoryId}`).value.trim();
+                    mobileNumber = document.getElementById(`ps-mobile-number-${targetCategoryId}`).value.trim();
+                    location = document.getElementById(`ps-location-${targetCategoryId}`).value.trim();
+                    organizationName = document.getElementById(`ps-organization-name-${targetCategoryId}`).value.trim();
+                    
+                    if (!customerNameId || !mobileNumber || !location || !organizationName) {
+                        alert('অনুগ্রহ করে গ্রাহকের বিবরণীর সকল ফিল্ড পূরণ করুন।');
+                        return;
+                    }
+
+                    items = [];
+                    let totalAmountForPs = 0;
+                    const psItemsContainer = document.getElementById(`ps-items-container-${targetCategoryId}`); // Get the correct container
+                    const itemRows = psItemsContainer.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-6');
+                    
+                    if (itemRows.length === 0) {
+                        alert('অনুগ্রহ করে কমপক্ষে একটি আইটেম যোগ করুন।');
+                        return;
+                    }
+
+                    let validationFailed = false;
+                    for (const row of itemRows) { // Use for...of for easier breaking
+                        const description = row.querySelector('.item-description').value.trim();
+                        const warranty = row.querySelector('.item-warranty').value.trim();
+                        const qty = parseInt(row.querySelector('.item-qty').value);
+                        const unitPrice = parseFloat(row.querySelector('.item-unit-price').value);
+
+                        if (!description || isNaN(qty) || qty <= 0 || isNaN(unitPrice) || unitPrice < 0) {
+                            alert('আইটেমের বিবরণ, পরিমাণ এবং ইউনিট মূল্য সঠিক হতে হবে।');
+                            validationFailed = true;
+                            break; // Break out of the loop
+                        }
+                        const itemAmount = qty * unitPrice;
+                        totalAmountForPs += itemAmount;
+                        items.push({ description, warranty, qty, unitPrice, amount: itemAmount });
+                    }
+
+                    if (validationFailed) {
+                        return; // Stop if any item validation failed
+                    }
+                    
+                    const entryData = { 
+                        date, 
+                        customerNameId, 
+                        mobileNumber, 
+                        location, 
+                        organizationName, 
+                        items, 
+                        amount: totalAmountForPs, // Store total amount for dashboard calculation
+                        categoryId: targetCategoryId 
+                    };
+
+                    const newId = await addData(targetType === 'income' ? 'incomeEntries' : 'expenseEntries', entryData);
+                    entryData.id = newId;
+                    if (targetType === 'income') incomeEntries.push(entryData);
+                    else expenseEntries.push(entryData);
+                    alert('এন্ট্রি সফলভাবে যোগ হয়েছে!');
+
+                    // Clear form fields after saving
+                    document.getElementById(`ps-customer-name-id-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-mobile-number-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-location-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-organization-name-${targetCategoryId}`).value = '';
+                    psItemsContainer.innerHTML = ''; // Clear items
+                    addProductServiceItemRow(); // Add one empty row back
+                    document.getElementById(`inline-date-${targetCategoryId}`).value = new Date().toISOString().split('T')[0];
+
+                } else { // Generic entry
+                    amount = parseFloat(document.getElementById(`inline-amount-${targetCategoryId}`).value);
+                    description = document.getElementById(`inline-description-${targetCategoryId}`).value.trim();
+                    if (isNaN(amount) || amount <= 0 || !description) {
+                        alert('অনুগ্রহ করে সঠিক পরিমাণ এবং বিবরণ লিখুন।');
+                        return;
+                    }
+                    const entryData = { amount, date, description, categoryId: targetCategoryId };
+                    const newId = await addData(targetType === 'income' ? 'incomeEntries' : 'expenseEntries', entryData);
+                    entryData.id = newId;
+                    if (targetType === 'income') incomeEntries.push(entryData);
+                    else expenseEntries.push(entryData);
+                    alert('এন্ট্রি সফলভাবে যোগ হয়েছে!');
+
+                    // Clear form fields after saving
+                    document.getElementById(`inline-amount-${targetCategoryId}`).value = '';
+                    document.getElementById(`inline-description-${targetCategoryId}`).value = '';
+                    document.getElementById(`inline-date-${targetCategoryId}`).value = new Date().toISOString().split('T')[0];
+                }
+
+                await loadAndRenderAllData(); // Re-render all data
+                filterAndRenderEntries(); // Re-apply filter after new entry
+            });
+
+            // Add event listener for reset button
+            categoryDetailViewContent.querySelector('.reset-inline-entry-btn').addEventListener('click', (e) => {
+                const targetCategoryId = parseInt(e.target.dataset.categoryId);
+                const isInternetBill = e.target.dataset.isInternetBillCollection === 'true';
+                const isProductService = e.target.dataset.isProductServiceBill === 'true';
+
+                document.getElementById(`inline-date-${targetCategoryId}`).value = new Date().toISOString().split('T')[0];
+
+                if (isInternetBill) {
+                    document.getElementById(`internet-bill-amount-${targetCategoryId}`).value = '';
+                    document.getElementById(`internet-bill-customer-${targetCategoryId}`).value = category.name; // Reset to category name
+                    document.getElementById(`internet-bill-location-${targetCategoryId}`).value = '';
+                    document.getElementById(`internet-bill-month-${targetCategoryId}`).value = '';
+                } else if (isProductService) {
+                    document.getElementById(`ps-customer-name-id-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-mobile-number-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-location-${targetCategoryId}`).value = '';
+                    document.getElementById(`ps-organization-name-${targetCategoryId}`).value = '';
+                    const psItemsContainer = document.getElementById(`ps-items-container-${targetCategoryId}`);
+                    psItemsContainer.innerHTML = '';
+                    addProductServiceItemRow(); // Add one empty row back
+                } else {
+                    document.getElementById(`inline-amount-${targetCategoryId}`).value = '';
+                    document.getElementById(`inline-description-${targetCategoryId}`).value = '';
+                }
+            });
+
+            // Event listener for Generate Bill button (now on individual entries)
+            document.addEventListener('click', async (e) => {
+                if (e.target.closest('.generate-bill-btn')) {
+                    const btn = e.target.closest('.generate-bill-btn');
+                    const entryId = parseInt(btn.dataset.entryId);
+                    const categoryId = parseInt(btn.dataset.categoryId);
+                    const billType = btn.dataset.billType;
+
+                    const category = getCategoryById(categoryId, 'income');
+                    if (!category) {
+                        alert('ক্যাটাগরি খুঁজে পাওয়া যায়নি।');
+                        return;
+                    }
+
+                    const entry = incomeEntries.find(e => e.id === entryId);
+                    if (!entry) {
+                        alert('এন্ট্রি খুঁজে পাওয়া যায়নি।');
+                        return;
+                    }
+
+                    if (billType === 'internet') {
+                        const billHtml = generateInternetBillHtml(category, entry);
+                        internetBillContent.innerHTML = billHtml;
+                        internetBillDisplayModal.style.display = 'flex';
+                    } else if (billType === 'product-service') {
+                        const billHtml = generateProductServiceBillHtml(category, entry);
+                        productServiceBillContent.innerHTML = billHtml;
+                        productServiceBillDisplayModal.style.display = 'flex';
+                    }
+                }
+            });
+        }
+
+        // Helper to get category name by ID
+        function getCategoryNameById(id, type) {
+            const categories = type === 'income' ? incomeCategories : expenseCategories;
+            const category = categories.find(cat => cat.id === id);
+            return category ? category.name : 'Unknown';
+        }
+
+        // Update Dashboard totals
+        async function updateDashboardTotals() {
+            const totalIncome = incomeEntries.reduce((sum, entry) => {
+                if (entry.items && Array.isArray(entry.items)) {
+                    return sum + entry.items.reduce((itemSum, item) => itemSum + (item.qty * item.unitPrice), 0);
+                }
+                return sum + entry.amount;
+            }, 0);
+            const totalExpense = expenseEntries.reduce((sum, entry) => sum + entry.amount, 0);
+            const netBalance = totalIncome - totalExpense;
+
+            // Update dashboard cards
+            const totalIncomeDisplayElement = document.getElementById('total-income-display');
+            if (totalIncomeDisplayElement) {
+                totalIncomeDisplayElement.textContent = `৳ ${totalIncome.toLocaleString('bn-BD')}`;
+            }
+
+            const totalExpenseDisplayElement = document.getElementById('total-expense-display');
+            if (totalExpenseDisplayElement) {
+                totalExpenseDisplayElement.textContent = `৳ ${totalExpense.toLocaleString('bn-BD')}`;
+            }
+
+            const netBalanceDisplayElement = document.getElementById('net-balance-display');
+            if (netBalanceDisplayElement) {
+                netBalanceDisplayElement.textContent = `৳ ${netBalance.toLocaleString('bn-BD')}`;
+            }
+            
+            // Render recent transactions (last 5)
+            const allTransactions = [
+                ...incomeEntries.map(e => ({ 
+                    ...e, 
+                    type: 'income', 
+                    categoryName: getCategoryNameById(e.categoryId, 'income'),
+                    displayAmount: e.items ? e.items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0) : e.amount
+                })),
+                ...expenseEntries.map(e => ({ 
+                    ...e, 
+                    type: 'expense', 
+                    categoryName: getCategoryNameById(e.categoryId, 'expense'),
+                    displayAmount: e.amount
+                }))
+            ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            if (recentTransactionsList) { // Added null check for recentTransactionsList
+                recentTransactionsList.innerHTML = '';
+                if (allTransactions.length === 0) {
+                    recentTransactionsList.innerHTML = '<li class="py-3 text-gray-500 text-center">কোনো সাম্প্রতিক লেনদেন নেই।</li>';
+                } else {
+                    allTransactions.forEach(trans => {
+                        const li = document.createElement('li');
+                        li.className = 'recent-activity-item'; // Updated class for styling
+                        const amountClass = trans.type === 'income' ? 'text-green-600' : 'text-red-600';
+                        const iconClass = trans.type === 'income' ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                        // Display customerNameId/monthPeriod/location/organizationName if available, otherwise general description
+                        let descriptionText = '';
+                        if (trans.customerNameId) {
+                            descriptionText += trans.customerNameId;
+                            if (trans.organizationName) descriptionText += ` (${trans.organizationName})`;
+                            if (trans.location) descriptionText += `, ${trans.location}`;
+                            if (trans.monthPeriod) descriptionText += ` (${trans.monthPeriod})`;
+                        } else if (trans.description) {
+                            descriptionText = trans.description;
+                        }
+                        
+                        li.innerHTML = `
+                            <div>
+                                <i class="${iconClass} mr-2 ${amountClass}"></i>
+                                ${trans.categoryName || 'N/A'} - ${trans.date} ${descriptionText ? '(' + descriptionText + ')' : ''}
+                            </div>
+                            <span class="${amountClass} font-semibold">৳ ${trans.displayAmount.toLocaleString('bn-BD')}</span>
+                        `;
+                        recentTransactionsList.appendChild(li);
+                    });
+                }
+            }
+        }
+
+        // --- Modals ---
+
+        // Open Entry Modal (now only for editing)
+        function openEntryModal(entryId = null, categoryId, type, isInternetBillCollection = false, isProductServiceBill = false) {
+            entryModal.style.display = 'flex';
+            modalCategoryId.value = categoryId;
+            modalEntryType.value = type;
+            modalIsInternetBillCollection.value = isInternetBillCollection ? 'true' : 'false';
+            modalIsProductServiceBill.value = isProductServiceBill ? 'true' : 'false';
+
+            // Hide all conditional fields first
+            modalInternetBillFields.classList.add('hidden');
+            modalProductServiceBillFields.classList.add('hidden');
+            modalGeneralDescriptionField.classList.add('hidden');
+            entryAmountInput.classList.add('hidden'); // Hide generic amount input by default
+
+            // Show relevant fields based on category type
+            if (isInternetBillCollection) {
+                modalInternetBillFields.classList.remove('hidden');
+                entryAmountInput.classList.remove('hidden'); // Show amount for internet bill
+            } else if (isProductServiceBill) {
+                modalProductServiceBillFields.classList.remove('hidden');
+                productServiceItemsContainer.innerHTML = ''; // Clear existing items
+            } else {
+                modalGeneralDescriptionField.classList.remove('hidden');
+                entryAmountInput.classList.remove('hidden'); // Show amount for generic entry
+            }
+
+            // Clear all input values
+            entryAmountInput.value = '';
+            entryDateInput.value = new Date().toISOString().split('T')[0]; // Set current date
+            entryDescriptionInput.value = '';
+            entryCustomerNameIdInput.value = '';
+            entryLocationInput.value = '';
+            entryMonthPeriodInput.value = '';
+            entryPsCustomerNameIdInput.value = '';
+            entryPsMobileNumberInput.value = '';
+            entryPsLocationInput.value = '';
+            entryPsOrganizationNameInput.value = '';
+
+
+            if (entryId) {
+                modalTitle.textContent = 'এন্ট্রি সম্পাদনা করুন';
+                modalEntryId.value = entryId;
+                const entries = type === 'income' ? incomeEntries : expenseEntries;
+                const entry = entries.find(e => e.id === entryId);
+                if (entry) {
+                    entryDateInput.value = entry.date;
+                    if (isInternetBillCollection) {
+                        entryAmountInput.value = entry.amount;
+                        entryCustomerNameIdInput.value = entry.customerNameId || '';
+                        entryLocationInput.value = entry.location || '';
+                        entryMonthPeriodInput.value = entry.monthPeriod || '';
+                    } else if (isProductServiceBill) {
+                        entryPsCustomerNameIdInput.value = entry.customerNameId || '';
+                        entryPsMobileNumberInput.value = entry.mobileNumber || '';
+                        entryPsLocationInput.value = entry.location || '';
+                        entryPsOrganizationNameInput.value = entry.organizationName || '';
+                        // Populate items for product/service bill
+                        if (entry.items && Array.isArray(entry.items)) {
+                            entry.items.forEach(item => addProductServiceItemRowModal(item));
+                        } else {
+                            addProductServiceItemRowModal(); // Add one empty row if no items
+                        }
+                    } else {
+                        entryAmountInput.value = entry.amount;
+                        entryDescriptionInput.value = entry.description || '';
+                    }
+                }
+            } else {
+                // This path should ideally not be taken for new entries now, as they are inline
+                modalTitle.textContent = 'এন্ট্রি যোগ করুন (শুধুমাত্র সম্পাদনার জন্য)';
+                modalEntryId.value = '';
+                if (isProductServiceBill) {
+                    addProductServiceItemRowModal(); // Add one empty row for new product/service entry
+                }
+            }
+        }
+
+        // Helper function to add a product/service item row in the modal
+        let modalPsItemCounter = 0;
+        function addProductServiceItemRowModal(item = {}) {
+            const itemId = modalPsItemCounter++;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 p-2 border rounded-md bg-gray-50';
+            itemDiv.innerHTML = `
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 text-xs font-bold mb-1">DESCRIPTION</label>
+                    <input type="text" class="w-full px-2 py-1 border rounded-lg text-sm modal-item-description" placeholder="Description" value="${item.description || ''}">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">WARRANTY</label>
+                    <input type="text" class="w-full px-2 py-1 border rounded-lg text-sm modal-item-warranty" placeholder="Warranty" value="${item.warranty || ''}">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">QTY</label>
+                    <input type="number" class="w-full px-2 py-1 border rounded-lg text-sm modal-item-qty" placeholder="Qty" value="${item.qty || 1}">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">UNIT PRICE</label>
+                    <input type="number" class="w-full px-2 py-1 border rounded-lg text-sm modal-item-unit-price" placeholder="Unit Price" value="${item.unitPrice || 0}">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" class="delete-item-btn bg-red-500 text-white px-2 py-1 rounded-md text-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            productServiceItemsContainer.appendChild(itemDiv);
+
+            // Add event listener for delete button
+            itemDiv.querySelector('.delete-item-btn').addEventListener('click', () => {
+                itemDiv.remove();
+            });
+        }
+
+        // Add event listener for "Add Item" button in the modal
+        addProductServiceItemBtn.addEventListener('click', () => addProductServiceItemRowModal());
+
+
+        // Close Entry Modal
+        closeEntryModal.addEventListener('click', () => {
+            entryModal.style.display = 'none';
+        });
+
+        // Save Entry (from modal, primarily for editing)
+        saveEntryButton.addEventListener('click', async () => {
+            const date = entryDateInput.value;
+            const categoryId = parseInt(modalCategoryId.value);
+            const type = modalEntryType.value;
+            const entryId = modalEntryId.value ? parseInt(modalEntryId.value) : null;
+            const isInternetBillCollection = modalIsInternetBillCollection.value === 'true';
+            const isProductServiceBill = modalIsProductServiceBill.value === 'true';
+
+            let entryData;
+
+            if (isInternetBillCollection) {
+                const amount = parseFloat(entryAmountInput.value);
+                const customerNameId = entryCustomerNameIdInput.value.trim();
+                const location = entryLocationInput.value.trim();
+                const monthPeriod = entryMonthPeriodInput.value.trim();
+                if (isNaN(amount) || amount <= 0 || !date || !customerNameId || !location || !monthPeriod) {
+                    alert('অনুগ্রহ করে সকল ফিল্ড পূরণ করুন।');
+                    return;
+                }
+                entryData = { amount, date, description: customerNameId, customerNameId, location, monthPeriod, categoryId };
+            } else if (isProductServiceBill) {
+                const customerNameId = entryPsCustomerNameIdInput.value.trim();
+                const mobileNumber = entryPsMobileNumberInput.value.trim();
+                const location = entryPsLocationInput.value.trim();
+                const organizationName = entryPsOrganizationNameInput.value.trim();
+
+                if (!customerNameId || !mobileNumber || !location || !organizationName) {
+                    alert('অনুগ্রহ করে গ্রাহকের বিবরণীর সকল ফিল্ড পূরণ করুন।');
+                    return;
+                }
+
+                const items = [];
+                let totalAmountForPs = 0;
+                const itemRows = productServiceItemsContainer.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-6');
+                if (itemRows.length === 0) {
+                    alert('অনুগ্রহ করে কমপক্ষে একটি আইটেম যোগ করুন।');
+                    return;
+                }
+                let validationFailed = false;
+                for (const row of itemRows) {
+                    const description = row.querySelector('.modal-item-description').value.trim();
+                    const warranty = row.querySelector('.modal-item-warranty').value.trim();
+                    const qty = parseInt(row.querySelector('.modal-item-qty').value);
+                    const unitPrice = parseFloat(row.querySelector('.modal-item-unit-price').value);
+
+                    if (!description || isNaN(qty) || qty <= 0 || isNaN(unitPrice) || unitPrice < 0) {
+                        alert('আইটেমের বিবরণ, পরিমাণ এবং ইউনিট মূল্য সঠিক হতে হবে।');
+                        validationFailed = true;
+                        break; // Break out of the loop
+                    }
+                    const itemAmount = qty * unitPrice;
+                    totalAmountForPs += itemAmount;
+                    items.push({ description, warranty, qty, unitPrice, amount: itemAmount });
+                }
+
+                if (validationFailed) {
+                    return; // Stop if any item validation failed
+                }
+
+                entryData = { 
+                    date, 
+                    customerNameId, 
+                    mobileNumber, 
+                    location, 
+                    organizationName, 
+                    items, 
+                    amount: totalAmountForPs, // Store total amount for dashboard calculation
+                    categoryId 
+                };
+
+            } else { // Generic entry
+                const amount = parseFloat(entryAmountInput.value);
+                const description = entryDescriptionInput.value.trim();
+                if (isNaN(amount) || amount <= 0 || !date || !description) {
+                    alert('অনুগ্রহ করে সঠিক পরিমাণ এবং বিবরণ লিখুন।');
+                    return;
+                }
+                entryData = { amount, date, description, categoryId };
+            }
+
+            const storeName = type === 'income' ? 'incomeEntries' : 'expenseEntries';
+
+            if (entryId) {
+                // Update existing entry
+                entryData.id = entryId;
+                await updateData(storeName, entryData);
+                const entriesArray = type === 'income' ? incomeEntries : expenseEntries;
+                const index = entriesArray.findIndex(e => e.id === entryId);
+                if (index !== -1) entriesArray[index] = entryData;
+                alert('এন্ট্রি সফলভাবে আপডেট হয়েছে!');
+            } else {
+                alert('নতুন এন্ট্রি যোগ করার জন্য ইনলাইন ফর্ম ব্যবহার করুন।');
+                return;
+            }
+
+            entryModal.style.display = 'none';
+            await loadAndRenderAllData(); // Re-render all data
+            // Re-render the specific category view to update the filtered list
+            showCategoryDetailView(categoryId, type, getCategoryById(categoryId, type).level);
+        });
+
+        // Open Add Category Modal
+        function openAddCategoryModal(parentId, type, level) {
+            addCategoryModal.style.display = 'flex';
+            newCategoryParentId.value = parentId;
+            newCategoryType.value = type;
+            newCategoryLevel.value = level;
+            newCategoryNameInput.value = '';
+        }
+
+        // Close Add Category Modal
+        closeAddCategoryModal.addEventListener('click', () => {
+            addCategoryModal.style.display = 'none';
+        });
+
+        // Save New Category
+        saveNewCategoryButton.addEventListener('click', async () => {
+            const name = newCategoryNameInput.value.trim();
+            const parentId = newCategoryParentId.value === 'null' ? null : parseInt(newCategoryParentId.value);
+            const type = newCategoryType.value;
+            const level = newCategoryLevel.value;
+
+            if (!name) {
+                alert('অনুগ্রহ করে ক্যাটাগরি/নাম লিখুন।');
+                return;
+            }
+
+            const categoryData = { name, parentId, type, level };
+            const storeName = type === 'income' ? 'incomeCategories' : 'expenseCategories';
+
+            const newId = await addData(storeName, categoryData);
+            categoryData.id = newId;
+
+            if (type === 'income') incomeCategories.push(categoryData);
+            else expenseCategories.push(categoryData);
+
+            alert('নতুন ক্যাটাগরি সফলভাবে যোগ হয়েছে!');
+            addCategoryModal.style.display = 'none';
+            await loadAndRenderAllData(); // Re-render all data
+        });
+
+        // Custom Confirmation Modal Function
+        function showConfirmModal(message, onConfirmCallback) {
+            confirmMessage.textContent = message;
+            confirmModal.style.display = 'flex';
+
+            // Clear previous event listeners to prevent multiple calls
+            confirmYesButton.onclick = null;
+            confirmNoButton.onclick = null;
+
+            confirmYesButton.onclick = () => {
+                confirmModal.style.display = 'none';
+                onConfirmCallback(true);
+            };
+
+            confirmNoButton.onclick = () => {
+                confirmModal.style.display = 'none';
+                onConfirmCallback(false);
+            };
+        }
+
+        // Event delegation for edit/delete buttons on entries
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.edit-entry-btn')) {
+                const btn = e.target.closest('.edit-entry-btn');
+                const entryId = parseInt(btn.dataset.entryId);
+                const categoryId = parseInt(btn.dataset.categoryId);
+                const type = btn.dataset.entryType;
+                const isInternetBillCollection = btn.dataset.isInternetBillCollection === 'true'; 
+                const isProductServiceBill = btn.dataset.isProductServiceBill === 'true';
+                openEntryModal(entryId, categoryId, type, isInternetBillCollection, isProductServiceBill);
+            } else if (e.target.closest('.delete-entry-btn')) {
+                const btn = e.target.closest('.delete-entry-btn');
+                const entryId = parseInt(btn.dataset.entryId);
+                const type = btn.dataset.entryType;
+                
+                showConfirmModal('আপনি কি এই এন্ট্রিটি মুছে ফেলতে চান?', async (confirmed) => {
+                    if (confirmed) {
+                        const storeName = type === 'income' ? 'incomeEntries' : 'expenseEntries';
+                        await deleteData(storeName, entryId);
+                        if (type === 'income') incomeEntries = incomeEntries.filter(e => e.id !== entryId);
+                        else expenseEntries = expenseEntries.filter(e => e.id !== entryId);
+                        alert('এন্ট্রি সফলভাবে মুছে ফেলা হয়েছে!');
+                        // After deletion, re-render the current category detail view to update the list
+                        const categoryId = parseInt(btn.dataset.categoryId);
+                        const category = getCategoryById(categoryId, type);
+                        showCategoryDetailView(categoryId, type, category.level);
+                        await loadAndRenderAllData(); // Re-render all data for dashboard totals
+                    }
+                });
+            }
+        });
+
+        // Export Data Function
+        async function exportData() {
+            try {
+                console.log('Starting data export...');
+                const allIncomeCategories = await getAllData('incomeCategories');
+                const allExpenseCategories = await getAllData('expenseCategories');
+                const allIncomeEntries = await getAllData('incomeEntries');
+                const allExpenseEntries = await getAllData('expenseEntries');
+                console.log('Data fetched for export:', { incomeCategories: allIncomeCategories.length, expenseCategories: allExpenseCategories.length, incomeEntries: allIncomeEntries.length, expenseEntries: allExpenseEntries.length });
+
+                const dataToExport = {
+                    incomeCategories: allIncomeCategories,
+                    expenseCategories: allExpenseCategories,
+                    incomeEntries: allIncomeEntries,
+                    expenseEntries: allExpenseEntries
+                };
+
+                const jsonString = JSON.stringify(dataToExport, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'finance_app_data.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('ডেটা সফলভাবে এক্সপোর্ট করা হয়েছে!');
+                console.log('Data export completed successfully.');
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('ডেটা এক্সপোর্ট করতে সমস্যা হয়েছে।');
+            }
+        }
+
+        // Helper function to clear all IndexedDB stores
+        function clearAllDataStores() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(db.objectStoreNames, 'readwrite');
+                let clearedCount = 0;
+                const totalStores = db.objectStoreNames.length;
+                console.log(`Clearing ${totalStores} IndexedDB stores...`);
+
+                if (totalStores === 0) {
+                    console.log('No stores to clear.');
+                    resolve();
+                    return;
+                }
+
+                Array.from(db.objectStoreNames).forEach(storeName => {
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    request.onsuccess = () => {
+                        console.log(`Store '${storeName}' cleared.`);
+                        clearedCount++;
+                        if (clearedCount === totalStores) {
+                            console.log('All object stores cleared.');
+                            resolve();
+                        }
+                    };
+                    request.onerror = (event) => {
+                        console.error(`Error clearing store '${storeName}':`, event.target.error);
+                        reject(event.target.error);
+                    };
+                });
+            });
+        }
+
+        // Data Import Function
+        async function importData(file) {
+            if (!file) {
+                alert('কোনো ফাইল নির্বাচন করা হয়নি।');
+                return;
+            }
+
+            showConfirmModal('আপনি কি নিশ্চিত যে আপনি বর্তমান ডেটা মুছে ফেলে নতুন ডেটা ইম্পোর্ট করতে চান? এই প্রক্রিয়াটি ফিরিয়ে আনা যাবে না।', async (confirmed) => {
+                if (!confirmed) {
+                    console.log('Data import cancelled by user.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        console.log('File loaded, attempting to parse JSON for import...');
+                        const importedData = JSON.parse(event.target.result);
+                        console.log('JSON parsed:', importedData);
+
+                        // Validate imported data structure roughly
+                        if (!importedData.incomeCategories || !Array.isArray(importedData.incomeCategories) ||
+                            !importedData.expenseCategories || !Array.isArray(importedData.expenseCategories) ||
+                            !importedData.incomeEntries || !Array.isArray(importedData.incomeEntries) ||
+                            !importedData.expenseEntries || !Array.isArray(importedData.expenseEntries)) {
+                            throw new Error('ইম্পোর্ট করা ফাইলের ডেটা কাঠামো সঠিক নয়।');
+                        }
+
+                        console.log('Clearing all existing data stores before import...');
+                        await clearAllDataStores();
+                        console.log('Existing data cleared. Starting import process...');
+
+                        const oldToNewCategoryIdMap = new Map();
+
+                        // Helper to add categories and build the ID map
+                        const addCategoriesAndBuildMap = async (categories, storeName) => {
+                            for (const cat of categories) {
+                                const oldId = cat.id;
+                                const { id, ...dataWithoutId } = cat; // Exclude old ID for auto-increment
+                                const newId = await addData(storeName, dataWithoutId);
+                                oldToNewCategoryIdMap.set(oldId, newId);
+                            }
+                        };
+
+                        // First pass: Add all categories to get new IndexedDB IDs and build the map
+                        await addCategoriesAndBuildMap(importedData.incomeCategories, 'incomeCategories');
+                        await addCategoriesAndBuildMap(importedData.expenseCategories, 'expenseCategories');
+                        console.log('Categories imported and ID map built:', oldToNewCategoryIdMap);
+
+                        // Second pass: Update parentIds of categories using the new IDs
+                        // Re-fetch categories from DB to work with the actual records that have new IDs
+                        const currentIncomeCategories = await getAllData('incomeCategories');
+                        const currentExpenseCategories = await getAllData('expenseCategories');
+
+                        // This part needs to be careful. The currentIncomeCategories and currentExpenseCategories
+                        // now have the *new* IDs. We need to iterate through the *original* imported categories
+                        // to find their old parentIds and then map them to new parentIds.
+                        for (const originalCat of importedData.incomeCategories) {
+                            if (originalCat.parentId !== null) {
+                                const newParentId = oldToNewCategoryIdMap.get(originalCat.parentId);
+                                if (newParentId !== undefined) {
+                                    // Find the category with the new ID and update its parentId
+                                    const currentCat = currentIncomeCategories.find(c => oldToNewCategoryIdMap.get(originalCat.id) === c.id);
+                                    if (currentCat) {
+                                        currentCat.parentId = newParentId;
+                                        await updateData('incomeCategories', currentCat);
+                                    }
+                                } else {
+                                    console.warn(`Parent ID ${originalCat.parentId} for category ${originalCat.name} (old ID: ${originalCat.id}) not found in map during parentId update. Setting to null.`);
+                                    const currentCat = currentIncomeCategories.find(c => oldToNewCategoryIdMap.get(originalCat.id) === c.id);
+                                    if (currentCat) {
+                                        currentCat.parentId = null;
+                                        await updateData('incomeCategories', currentCat);
+                                    }
+                                }
+                            }
+                        }
+
+                        for (const originalCat of importedData.expenseCategories) {
+                            if (originalCat.parentId !== null) {
+                                const newParentId = oldToNewCategoryIdMap.get(originalCat.parentId);
+                                if (newParentId !== undefined) {
+                                    const currentCat = currentExpenseCategories.find(c => oldToNewCategoryIdMap.get(originalCat.id) === c.id);
+                                    if (currentCat) {
+                                        currentCat.parentId = newParentId;
+                                        await updateData('expenseCategories', currentCat);
+                                    }
+                                } else {
+                                    console.warn(`Parent ID ${originalCat.parentId} for category ${originalCat.name} (old ID: ${originalCat.id}) not found in map during parentId update. Setting to null.`);
+                                    const currentCat = currentExpenseCategories.find(c => oldToNewCategoryIdMap.get(originalCat.id) === c.id);
+                                    if (currentCat) {
+                                        currentCat.parentId = null;
+                                        await updateData('expenseCategories', currentCat);
+                                    }
+                                }
+                            }
+                        }
+                        console.log('Category parent IDs updated.');
+                        
+                        // Add imported entries
+                        for (const entry of importedData.incomeEntries) {
+                            const oldCategoryId = entry.categoryId;
+                            const newCategoryId = oldToNewCategoryIdMap.get(oldCategoryId);
+                            if (newCategoryId === undefined) {
+                                console.warn(`Category ID ${oldCategoryId} for entry (old ID: ${entry.id}) not found in map. Skipping entry.`);
+                                continue; // Skip this entry if its category couldn't be remapped
+                            }
+                            const { id, ...dataWithoutId } = entry; // Exclude old ID for auto-increment
+                            dataWithoutId.categoryId = newCategoryId; // Set the new category ID
+                            await addData('incomeEntries', dataWithoutId);
+                        }
+                        console.log('Income entries imported and category IDs updated.');
+                        for (const entry of importedData.expenseEntries) {
+                            const oldCategoryId = entry.categoryId;
+                            const newCategoryId = oldToNewCategoryIdMap.get(oldCategoryId);
+                            if (newCategoryId === undefined) {
+                                console.warn(`Category ID ${oldCategoryId} for entry (old ID: ${entry.id}) not found in map. Skipping entry.`);
+                                continue; // Skip this entry if its category couldn't be remapped
+                            }
+                            const { id, ...dataWithoutId } = entry; // Exclude old ID for auto-increment
+                            dataWithoutId.categoryId = newCategoryId; // Set the new category ID
+                            await addData('expenseEntries', dataWithoutId);
+                        }
+                        console.log('Expense entries imported and category IDs updated.');
+
+                        alert('ডেটা সফলভাবে ইম্পোর্ট করা হয়েছে!');
+                        console.log('Data import completed successfully. Reloading page to reflect changes.');
+                        location.reload(); // Reload to refresh UI with new data
+                    } catch (error) {
+                        console.error('Error during data import process:', error);
+                        alert(`ডেটা ইম্পোর্ট করতে সমস্যা হয়েছে: ${error.message || error}. অনুগ্রহ করে সঠিক JSON ফাইল নিশ্চিত করুন।`);
+                    }
+                };
+                reader.onerror = (error) => {
+                    console.error('ফাইল পড়তে সমস্যা হয়েছে:', error);
+                    alert('ফাইল পড়তে সমস্যা হয়েছে।');
+                };
+                reader.readAsText(file);
+            });
+        }
+
+
+        // Reset All Data Function
+        async function resetAllData() {
+            showConfirmModal('আপনি কি নিশ্চিত যে আপনি সকল ডেটা মুছে ফেলতে চান? এই প্রক্রিয়াটি ফিরিয়ে আনা যাবে না।', async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        console.log('User confirmed data reset. Starting reset process...');
+                        // Ensure DB is open before trying to clear stores
+                        await openDB(); // Re-open DB if it was closed or not fully initialized
+
+                        await clearAllDataStores();
+                        console.log('All existing data cleared. Populating initial data...');
+                        
+                        // Reload initial data after clearing
+                        await populateInitialData(); // This will re-populate if stores are empty
+                        
+                        alert('সকল ডেটা সফলভাবে মুছে ফেলা হয়েছে এবং সফটওয়্যার প্রাথমিক অবস্থায় ফিরে এসেছে!');
+                        console.log('Data reset completed successfully. Attempting to reload page.');
+                        location.reload();
+                    } catch (error) {
+                        console.error('Error in resetAllData:', error);
+                        alert('ডেটা রিসেট করতে একটি অপ্রত্যাশিত সমস্যা হয়েছে।');
+                    }
+                } else {
+                    console.log('Data reset cancelled by user.');
+                }
+            });
+        }
+
+
+        // --- Load Data & Render UI ---
+        async function loadAndRenderAllData() {
+            try {
+                console.log('Loading and rendering all data...');
+                incomeCategories = await getAllData('incomeCategories');
+                expenseCategories = await getAllData('expenseCategories'); 
+                incomeEntries = await getAllData('incomeEntries');
+                expenseEntries = await getAllData('expenseEntries');
+
+                console.log('Data loaded. Income Categories:', incomeCategories.length, 'Expense Categories:', expenseCategories.length, 'Income Entries:', incomeEntries.length, 'Expense Entries:', expenseEntries.length); // Debug log
+
+                // Render Sidebar Categories
+                console.log('Rendering sidebar income categories...');
+                await renderSidebarCategories(incomeCategoriesSidebarContainer, incomeCategories, incomeEntries, null, 'income');
+                console.log('Rendering sidebar expense categories...');
+                await renderSidebarCategories(expenseCategoriesSidebarContainer, expenseCategories, expenseEntries, null, 'expense');
+
+                // Update Dashboard Totals
+                console.log('Updating dashboard totals...');
+                await updateDashboardTotals();
+                console.log('Dashboard totals updated.');
+
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                alert('ডেটা লোড করতে সমস্যা হয়েছে।');
+            }
+        }
+
+        // Helper to get category by ID
+        function getCategoryById(id, type) {
+            const categories = type === 'income' ? incomeCategories : expenseCategories;
+            return categories.find(cat => cat.id === id);
+        }
+
+        // --- Bill Header and Footer HTML (Empty as per user's request) ---
+        const billHeaderHtml = ``;
+        const billFooterHtml = ``;
+
+
+        // --- Internet Bill Generation Logic ---
+
+        function formatDateForBill(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const formattedDate = date.toLocaleDateString('en-US', options); // Get "July 05, 2025"
+            const day = date.getDate();
+            let daySuffix;
+            if (day > 3 && day < 21) daySuffix = 'th'; // Covers 4th to 20th
+            else {
+                switch (day % 10) {
+                    case 1:  daySuffix = 'st'; break;
+                    case 2:  daySuffix = 'nd'; break;
+                    case 3:  daySuffix = 'rd'; break;
+                    default: daySuffix = 'th';
+                }
+            }
+            // Replace day with day + suffix
+            return formattedDate.replace(/\b(\d{1,2})\b/, `$1${daySuffix}`);
+        }
+
+
+        function generateInternetBillHtml(category, entry) {
+            const clientName = entry.customerNameId;
+            const clientLocation = entry.location || 'N/A';
+            const packageDescription = `Monthly Internet Subscription Charge`; // Fixed string as per image
+            const price = entry.amount;
+            const vat = 0.00; // As per image
+            const total = price;
+            const billingDate = formatDateForBill(entry.date);
+            const amountInWords = numberToBengaliWords(total);
+
+            return `
+                ${billHeaderHtml}
+                <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">Monthly Internet Subscription Charge</h1>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <p style="margin: 0;">Attn. Accounts</p>
+                        <p style="margin: 0;">Client Name</p>
+                        <p style="margin: 0; font-weight: bold;">${clientName}</p>
+                        <p style="margin: 0;">${clientLocation}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 10%;">SL.</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 50%;">Package</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 15%;">Price</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 10%;">Vat</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 15%;">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: left;">1</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: left;">
+                                    ${packageDescription}
+                                    <br>
+                                    <span style="font-size: 11px;">&bull;User Category_${entry.monthPeriod || ''}</span>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right;">${price.toFixed(2)}</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right;">${vat.toFixed(2)}</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right;">${total.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="border: 1px solid #000; padding: 8px; text-align: left;">
+                                    Billing Date
+                                    <br>
+                                    <span style="font-weight: bold;">${billingDate}</span>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">${total.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin-bottom: 20px;">In Word: ${amountInWords}.</p>
+
+                    <p style="margin-bottom: 50px;">Payment Instruction: Please Pay Cash or Bkash Personal:- 01730-004342</p>
+
+                    <div style="text-align: center; margin-top: 50px;">
+                        <p>Thank You For Using Our Service.</p>
+                        <p style="margin-top: 20px; font-size: 10px;">Payable Within The First 7 Days Of Every Month</p>
+                    </div>
+                </div>
+                ${billFooterHtml}
+            `;
+        }
+
+        // --- Product/Service Bill Generation Logic ---
+        function generateProductServiceBillHtml(category, entry) {
+            const clientName = entry.customerNameId;
+            const clientMobile = entry.mobileNumber || 'N/A';
+            const clientLocation = entry.location || 'N/A';
+            const organizationName = entry.organizationName || 'N/A';
+            const billingDate = new Date(entry.date).toLocaleDateString('en-GB'); // DD/MM/YYYY
+            
+            let subtotal = 0;
+            let itemsHtml = '';
+            entry.items.forEach((item, index) => {
+                const itemAmount = item.qty * item.unitPrice;
+                subtotal += itemAmount;
+                itemsHtml += `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: left;">${item.description || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: left;">${item.warranty || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.qty}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">${item.unitPrice.toFixed(2)}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">${itemAmount.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            const serviceCharge = 0.00; // Assuming 0 as per image
+            const partiallyPaid = 0.00; // Assuming 0 as per image
+            const total = subtotal + serviceCharge - partiallyPaid;
+            const amountInWords = numberToBengaliWords(total);
+
+            // Generate a simple invoice number (e.g., based on entry ID and date)
+            const invoiceNo = `A001INV${String(entry.id).padStart(6, '0')}`; // Example: A001INV000001
+            // const currentDate = new Date().toLocaleDateString('en-GB'); // Current date for bill generation - not needed, using billingDate
+
+            return `
+                ${billHeaderHtml}
+                <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <div>
+                            <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">BILLING INVOICE</h1>
+                        </div>
+                        <div style="text-align: right;">
+                            <table style="width: auto; border-collapse: collapse;">
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; background-color: #f2f2f2;">INVOICE NO.</td>
+                                    <td style="border: 1px solid #000; padding: 4px 8px;">${invoiceNo}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; background-color: #f2f2f2;">DATE</td>
+                                    <td style="border: 1px solid #000; padding: 4px 8px;">${billingDate}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; background-color: #f2f2f2;">CUSTOMER ID</td>
+                                    <td style="border: 1px solid #000; padding: 4px 8px;">${clientName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; background-color: #f2f2f2;">TERMS</td>
+                                    <td style="border: 1px solid #000; padding: 4px 8px;">Cash/Cheque</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="background-color: #555; color: white; padding: 8px; margin-bottom: 10px; font-weight: bold;">
+                        Broadband Internet & IT Solution Company
+                    </div>
+                    <div style="background-color: #f2f2f2; padding: 8px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+                        <div style="font-weight: bold;">RAJASTHAN FORTUNE</div>
+                        <div>Cash/Cheque</div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-weight: bold; margin-bottom: 5px;">BILL TO:</h4>
+                        <p style="margin: 0;">Accounts Department</p>
+                        <p style="margin: 0;">${organizationName}</p>
+                        <p style="margin: 0;">${clientLocation}</p>
+                        <p style="margin: 0;">Chittagong</p>
+                        <p style="margin: 0;">Contact: ${clientMobile}</p>
+                        <p style="margin: 0;">ATTENTION: ${clientName}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #555; color: white;">
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">DESCRIPTION</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">WARRANTY</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">QTY</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right;">UNIT PRICE</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right;">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                            <tr>
+                                <td colspan="4" style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold; background-color: #f2f2f2;">SUBTOTAL</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">BDT ${subtotal.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f2f2f2;">Service Charage</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right;">BDT ${serviceCharge.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f2f2f2;">Partially Paid</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right;">BDT ${partiallyPaid.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold; background-color: #555; color: white;">TOTAL</td>
+                                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold; background-color: #555; color: white;">BDT ${total.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin-bottom: 20px; font-weight: bold;">In Word: ${amountInWords}.</p>
+
+                    <div style="text-align: center; margin-top: 50px;">
+                        <h2 style="font-size: 20px; font-weight: bold;">THANK YOU</h2>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 50px; font-size: 10px;">
+                        <div style="border-top: 1px solid #000; padding-top: 5px;">Client Signature</div>
+                        <div style="border-top: 1px solid #000; padding-top: 5px;">Authorised Signature</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 10px;">
+                        <p>For questions concerning this invoice, please contact</p>
+                        <p>Rakib-01958-340111, rhmiucbba@gmail.com</p>
+                        <p style="margin-top: 5px;"><a href="http://www.fnfbd.net" target="_blank" style="color: #0000EE; text-decoration: underline;">www.fnfbd.net</a></p>
+                    </div>
+                </div>
+                ${billFooterHtml}
+            `;
+        }
+
+
+        // --- Event Listeners ---
+
+        // Login Button Click
+        loginButton.addEventListener('click', () => {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            // Simple hardcoded login for demonstration
+            if (username === 'admin' && password === 'admin') {
+                localStorage.setItem('loggedIn', 'true');
+                loginPage.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                loadAndRenderAllData(); // Load data after successful login
+                showView('dashboard-view', 'ড্যাশবোর্ড'); // Show dashboard by default
+            } else {
+                loginMessage.classList.remove('hidden');
+                loginMessage.textContent = 'ইউজারনেম বা পাসওয়ার্ড ভুল হয়েছে!';
+            }
+        });
+
+        // Navigation Clicks
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const targetView = item.dataset.target;
+                if (targetView) {
+                    showView(targetView, item.querySelector('span').textContent);
+                } else if (item.id === 'logout-nav') {
+                    localStorage.removeItem('loggedIn');
+                    location.reload(); // Reload page to show login screen
+                }
+            });
+        });
+
+        // Toggle Income Section in Sidebar
+        incomeSectionToggle.addEventListener('click', () => {
+            incomeCategoriesSidebarContainer.classList.toggle('hidden');
+            addMainIncomeCategoryBtn.classList.toggle('hidden');
+            const toggleIcon = incomeSectionToggle.querySelector('.toggle-icon');
+            toggleIcon.classList.toggle('fa-plus');
+            toggleIcon.classList.toggle('fa-minus');
+        });
+
+        // Toggle Expense Section in Sidebar
+        expenseSectionToggle.addEventListener('click', () => {
+            expenseCategoriesSidebarContainer.classList.toggle('hidden');
+            addMainExpenseCategoryBtn.classList.toggle('hidden');
+            const toggleIcon = expenseSectionToggle.querySelector('.toggle-icon');
+            toggleIcon.classList.toggle('fa-plus');
+            toggleIcon.classList.toggle('fa-minus');
+        });
+
+        // Add Main Income Category Button
+        addMainIncomeCategoryBtn.addEventListener('click', () => {
+            openAddCategoryModal(null, 'income', 'main');
+        });
+
+        // Add Main Expense Category Button
+        addMainExpenseCategoryBtn.addEventListener('click', () => {
+            openAddCategoryModal(null, 'expense', 'main');
+        });
+
+        // Event Listeners for settings buttons
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const resetAllDataBtn = document.getElementById('reset-all-data-btn');
+
+        if (exportDataBtn) {
+            exportDataBtn.addEventListener('click', exportData);
+        }
+        if (resetAllDataBtn) {
+            resetAllDataBtn.addEventListener('click', resetAllData);
+        }
+
+        // Event Listeners for Import Data
+        const importDataBtn = document.getElementById('import-data-btn');
+        const importFileInput = document.getElementById('import-file-input');
+
+        if (importDataBtn) {
+            importDataBtn.addEventListener('click', () => {
+                importFileInput.click(); // Trigger hidden file input click
+            });
+        }
+
+        if (importFileInput) {
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    importData(file);
+                }
+                event.target.value = ''; // Clear the input so same file can be selected again
+            });
+        }
+
+        // Mobile menu toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('full-width');
+        });
+
+        // Close Internet Bill Modal
+        closeInternetBillModal.addEventListener('click', () => {
+            internetBillDisplayModal.style.display = 'none';
+        });
+
+        // Print Internet Bill Button
+        printBillBtn.addEventListener('click', () => {
+            const contentToPrint = internetBillContent.innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Internet Bill</title>');
+            // Include necessary styles for printing the bill
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+                .bill-print-area { width: 100%; padding: 20px; box-sizing: border-box; }
+                .bill-print-area table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .bill-print-area th, .bill-print-area td { border: 1px solid #000; padding: 8px; text-align: left; }
+                .bill-print-area th { background-color: #f2f2f2; }
+                .bill-print-area .text-center { text-align: center; }
+                .bill-print-area .font-bold { font-weight: bold; }
+                .bill-print-area .text-2xl { font-size: 24px; }
+                .bill-print-area .text-xl { font-size: 20px; }
+                .bill-print-area .text-sm { font-size: 12px; }
+                .bill-print-area .text-xs { font-size: 10px; }
+                .bill-print-area .mb-5 { margin-bottom: 5px; }
+                .bill-print-area .mb-20 { margin-bottom: 20px; }
+                .bill-print-area .mb-30 { margin-bottom: 30px; }
+                .bill-print-area .mb-50 { margin-bottom: 50px; }
+                .bill-print-area .mt-20 { margin-top: 20px; }
+                .bill-print-area .mt-50 { margin-top: 50px; }
+                .bill-print-area .mr-2 { margin-right: 8px; }
+                .bill-print-area .text-right { text-align: right; }
+            `);
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(contentToPrint);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        });
+
+        // Close Product/Service Bill Modal
+        closeProductServiceBillModal.addEventListener('click', () => {
+            productServiceBillDisplayModal.style.display = 'none';
+        });
+
+        // Print Product/Service Bill Button
+        printBillBtnPs.addEventListener('click', () => {
+            const contentToPrint = productServiceBillContent.innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Product/Service Bill</title>');
+            // Include necessary styles for printing the bill
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+                .bill-print-area { width: 100%; padding: 20px; box-sizing: border-box; }
+                .bill-print-area table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .bill-print-area th, .bill-print-area td { border: 1px solid #000; padding: 8px; text-align: left; }
+                .bill-print-area th { background-color: #f2f2f2; }
+                .bill-print-area .text-center { text-align: center; }
+                .bill-print-area .font-bold { font-weight: bold; }
+                .bill-print-area .text-2xl { font-size: 24px; }
+                .bill-print-area .text-xl { font-size: 20px; }
+                .bill-print-area .text-sm { font-size: 12px; }
+                .bill-print-area .text-xs { font-size: 10px; }
+                .bill-print-area .mb-5 { margin-bottom: 5px; }
+                .bill-print-area .mb-20 { margin-bottom: 20px; }
+                .bill-print-area .mb-30 { margin-bottom: 30px; }
+                .bill-print-area .mb-50 { margin-bottom: 50px; }
+                .bill-print-area .mt-20 { margin-top: 20px; }
+                .bill-print-area .mt-50 { margin-top: 50px; }
+                .bill-print-area .mr-2 { margin-right: 8px; }
+                .bill-print-area .text-right { text-align: right; }
+            `);
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(contentToPrint);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        });
+
+
+        // --- Initial Load ---
+        window.onload = async () => {
+            await openDB(); // Open IndexedDB first
+            await populateInitialData(); // Populate initial data if DB is empty
+            
+            // Check if already logged in
+            if (localStorage.getItem('loggedIn') === 'true') {
+                loginPage.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                await loadAndRenderAllData(); // Load data after successful login
+                showView('dashboard-view', 'ড্যাশবোর্ড'); // Show dashboard by default
+            } else {
+                loginPage.classList.remove('hidden'); // Ensure login page is visible
+                mainApp.classList.add('hidden'); // Ensure main app is hidden
+            }
+
+            // Adjust main content margin on window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    mainContent.classList.remove('full-width');
+                    sidebar.classList.add('hidden');
+                } else {
+                    mainContent.classList.remove('full-width');
+                    sidebar.classList.remove('hidden');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
