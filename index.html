@@ -929,8 +929,8 @@
                 await addData('expenseCategories', { name: 'Arpan', parentId: staffSalaryId, type: 'expense', level: 'name' });
                 await addData('expenseCategories', { name: 'new staff', parentId: staffSalaryId, type: 'expense', level: 'name' });
 
-                const RahimId = await addData('expenseCategories', { name: 'Rahim', parentId: null, type: 'expense', level: 'main' });
-                await addData('expenseCategories', { name: 'Rahim', parentId: staffSalaryId, type: 'expense', level: 'name' });
+                const rahimId = await addData('expenseCategories', { name: 'Rahim', parentId: null, type: 'expense', level: 'main' });
+                await addData('expenseCategories', { name: 'Rahim', parentId: rahim, type: 'expense', level: 'name' });
 
                 const paymentId = await addData('expenseCategories', { name: 'পেমেন্ট', parentId: null, type: 'expense', level: 'main' });
                 await addData('expenseCategories', { name: 'সনি ইলেকট্রনিক', parentId: paymentId, type: 'expense', level: 'name' });
